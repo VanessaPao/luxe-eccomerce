@@ -1,13 +1,114 @@
-function ProductCard() {
-    return (
-        <div className="product-card">
-            <h3>Suéter de Lana</h3>
+import React, { useState } from 'react';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import AuthModal from './AuthModal';
 
-            <p>$899</p>
-
-            <button>Agregar al carrito</button>
-        </div>
-    );
+/** HeartIcon */
+function HeartIcon({ filled }) {
+  return (
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+        fill={filled ? '#e63946' : 'none'}
+        stroke={filled ? '#e63946' : '#fff'}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
-export default ProductCard;
+/** CartIcon */
+function CartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <path
+        d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
+        fill="none"
+        stroke="#111"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line x1="3" y1="6" x2="21" y2="6" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M16 10a4 4 0 0 1-8 0"
+        fill="none"
+        stroke="#111"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * ProductCard
+ * Props: product { id, name, category, price, image }, isFav, onToggleFav
+ */
+export default function ProductCard({ product, isFav, onToggleFav }) {
+  const { id, name, category, price, image } = product;
+  const { addItem } = useCart();
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    if (!user) {
+      setShowAuthModal(true);
+    } else {
+      onToggleFav(id);
+    }
+  };
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    addItem(product);
+  };
+
+  return (
+    <>
+      <article className="product-card">
+        {/* Image */}
+        <div className="product-image-wrapper">
+          <img src={image} alt={name} className="product-image" />
+
+          {/* Heart button — top right */}
+          <button
+            className={`btn-favourite${isFav ? ' active' : ''}`}
+            onClick={handleFavoriteClick}
+            aria-label={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          >
+            <HeartIcon filled={isFav} />
+          </button>
+        </div>
+
+        {/* Body — blur + white text */}
+        <div className="product-body">
+          <div className="product-body-info">
+            <h4 className="product-name">{name}</h4>
+            <p className="product-category">{category}</p>
+            <p className="product-price">${price}</p>
+          </div>
+
+          {/* Cart button — white circle, black icon */}
+          <button
+            className="btn-cart"
+            aria-label="Añadir al carrito"
+            title="Añadir al carrito"
+            onClick={handleAddToCart}
+          >
+            <CartIcon />
+          </button>
+        </div>
+      </article>
+
+      {showAuthModal && (
+        <AuthModal onClose={() => setShowAuthModal(false)} />
+      )}
+    </>
+  );
+}

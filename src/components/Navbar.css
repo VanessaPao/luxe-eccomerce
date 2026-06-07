@@ -14,6 +14,17 @@
   margin-right: 40px;
 }
 
+/* Profile avatar in the top-left of navbar */
+.luxe-profile-btn {
+  margin-right: 16px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.luxe-profile-btn i {
+  font-size: 20px;
+}
+
 .luxe-nav-link {
   color: #9ea2a9 !important;
   font-weight: 500;
@@ -24,9 +35,12 @@
   padding: 4px 0 !important;
 }
 
-.luxe-nav-link:hover, .luxe-nav-link.active {
+.luxe-nav-link:hover,
+.luxe-nav-link.active {
   color: #ffffff !important;
+  border-bottom: 2px solid #ffffff !important;
 }
+
 
 .luxe-search-container {
   position: relative;
@@ -160,17 +174,17 @@
   .luxe-navbar {
     padding: 15px 20px !important;
   }
-  
+
   .luxe-search-container {
     max-width: 100%;
     margin: 15px 0;
   }
-  
+
   .luxe-actions-group {
     justify-content: flex-start;
     margin-top: 10px;
   }
-  
+
   .luxe-nav-link {
     margin-right: 0;
     padding: 10px 0 !important;

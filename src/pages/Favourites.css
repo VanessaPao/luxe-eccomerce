@@ -1,0 +1,148 @@
+/* Favourites.css */
+
+.favs-page {
+  min-height: 100vh;
+  background: #0a0a0a;
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.favs-title {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+.favs-count {
+  color: rgba(255,255,255,0.4);
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+.favs-subtitle {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+  margin-bottom: 3rem;
+}
+
+/* Empty State & Unauthenticated State */
+.favs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  gap: 1.25rem;
+  color: rgba(255,255,255,0.3);
+  font-size: 1.05rem;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 20px;
+  margin-top: 2rem;
+}
+
+.favs-empty h1 {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-size: 2rem;
+  color: #fff;
+  margin: 0;
+}
+
+.favs-empty p {
+  max-width: 400px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.favs-lock-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.favs-shop-link {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.8rem 2rem;
+  background: linear-gradient(135deg, #d4af37, #b8941f);
+  color: #0a0a0a;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.favs-shop-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212,175,55,0.35);
+}
+
+/* Auth Actions (Login/Register buttons in empty state) */
+.favs-auth-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.favs-btn {
+  padding: 0.8rem 1.8rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  letter-spacing: 0.02em;
+}
+
+.favs-btn.primary {
+  background: linear-gradient(135deg, #d4af37, #b8941f);
+  color: #0a0a0a;
+}
+.favs-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212,175,55,0.3);
+}
+
+.favs-btn.secondary {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+}
+.favs-btn.secondary:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(212,175,55,0.4);
+}
+
+/* Grid Placeholder */
+.favs-grid-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: rgba(255,255,255,0.02);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.favs-hint {
+  color: rgba(255,255,255,0.4);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .favs-auth-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .favs-btn { width: 100%; }
+}

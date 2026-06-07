@@ -22,4 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ─── Variables de entorno (NUNCA subir) ────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Notas personales / Obsidian vault (basura para el repo) ───────────────────
+E-commerce/
 **/.obsidian/
+
+# ─── Imágenes pegadas de Obsidian ──────────────────────────────────────────────
+**/Pasted image*.png
+**/Pasted image*.jpg
