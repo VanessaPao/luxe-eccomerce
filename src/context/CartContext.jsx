@@ -64,12 +64,15 @@ export function CartProvider({ children }) {
               : i
           );
         } else {
+          const activePrice = product.sale && product.salePrice !== undefined && product.salePrice !== null
+            ? product.salePrice
+            : product.price;
           next = [
             ...prev,
             {
               productId: String(product.id),
               name: product.name,
-              price: product.price,
+              price: activePrice,
               image: product.image,
               quantity,
             },

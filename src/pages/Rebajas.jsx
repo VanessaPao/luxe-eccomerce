@@ -1,98 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Mujer.css';
 import FiltersSidebar from '../components/FiltersSidebar';
 import ProductCard from '../components/ProductCard';
 import useFavourites from '../hooks/useFavourites';
+import { getSaleProducts } from '../firebase/firestore';
 
-const PRODUCTS = [
-  {
-    id: 301,
-    name: 'Vestido de Verano',
-    category: 'Vestidos',
-    size: 'Mediano',
-    price: 85,
-    material: 'Lino',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 302,
-    name: 'Camisa Slim Fit',
-    category: 'Camisas',
-    size: 'Chico',
-    price: 55,
-    material: 'Algodón',
-    color: 'Azul',
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 303,
-    name: 'Blazer Estructurado',
-    category: 'Blazers',
-    size: 'Grande',
-    price: 210,
-    material: 'Lana',
-    color: 'Gris',
-    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4bca6c?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 304,
-    name: 'Pantalón de Cuero',
-    category: 'Pantalones',
-    size: 'Mediano',
-    price: 175,
-    material: 'Cuero',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 305,
-    name: 'Abrigo Vintage',
-    category: 'Abrigos',
-    size: 'Grande',
-    price: 290,
-    material: 'Lana',
-    color: 'Marrón',
-    image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 306,
-    name: 'Falda Midi',
-    category: 'Faldas',
-    size: 'Mediano',
-    price: 75,
-    material: 'Algodón',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1551163943-3f7253a97e63?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 307,
-    name: 'Jersey Oversize',
-    category: 'Jerseys',
-    size: 'Grande',
-    price: 110,
-    material: 'Lana',
-    color: 'Gris',
-    image: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 308,
-    name: 'Bolso Tote',
-    category: 'Bolsos',
-    size: 'Grande',
-    price: 130,
-    material: 'Algodón',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=400&auto=format&fit=crop',
-  },
-];
-
-const categories = ['Vestidos', 'Camisas', 'Blazers', 'Pantalones', 'Abrigos', 'Faldas', 'Jerseys'];
+const categories = ['Vestidos', 'Pantalones', 'Camisas', 'Abrigos', 'Zapatos', 'Faldas', 'Chaquetas', 'Trajes', 'Bolsos', 'Cinturones', 'Joyería', 'Gafas', 'Pañuelos', 'Sombreros'];
 const sizes = ['Grande', 'Mediano', 'Chico'];
-const materials = ['Lino', 'Algodón', 'Lana', 'Cuero'];
+const materials = ['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero', 'Metal', 'Perla', 'Paja'];
 const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Marrón'];
 
 export default function Rebajas() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     category: [],
     size: [],
@@ -103,6 +23,31 @@ export default function Rebajas() {
   });
 
   const { isFav, toggle } = useFavourites();
+
+  useEffect(() => {
+    let active = true;
+    
+    const fetchProducts = async () => {
+      try {
+        const data = await getSaleProducts();
+        if (active) {
+          setProducts(data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error fetching sale products from Firestore:', error);
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchProducts();
+    
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const toggleArrayFilter = (key, value) => {
     setFilters((prev) => {
@@ -121,14 +66,21 @@ export default function Rebajas() {
     setFilters((prev) => ({ ...prev, [name]: Number(value) }));
   };
 
-  const filteredProducts = PRODUCTS.filter((p) => {
+  // Normalizar los productos para que category contenga el type (ej. Vestidos)
+  const normalizedProducts = products.map((p) => ({
+    ...p,
+    category: p.type || p.category,
+  }));
+
+  const filteredProducts = normalizedProducts.filter((p) => {
     const { category, size, priceMin, priceMax, material, color } = filters;
+    const activePrice = p.sale && p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.price;
     return (
       (category.length === 0 || category.includes(p.category)) &&
       (size.length === 0 || size.includes(p.size)) &&
       (material.length === 0 || material.includes(p.material)) &&
       (color.length === 0 || color.includes(p.color)) &&
-      p.price >= priceMin && p.price <= priceMax
+      activePrice >= priceMin && activePrice <= priceMax
     );
   });
 
@@ -147,7 +99,11 @@ export default function Rebajas() {
           colors={colors}
         />
         <section className="products-grid">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <p className="no-results">No hay productos que coincidan con los filtros.</p>
           ) : (
             filteredProducts.map((p) => (

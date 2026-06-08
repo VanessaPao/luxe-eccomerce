@@ -2,6 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { uploadImageToCloudinary } from '../../utils/cloudinary';
 import { createProduct, updateProduct } from '../../firebase/firestore';
 
+const TYPE_OPTIONS = {
+  mujer: [
+    'Vestidos',
+    'Faldas',
+    'Pantalones',
+    'Camisas',
+    'Chaquetas',
+    'Abrigos',
+    'Zapatos'
+  ],
+  hombre: [
+    'Camisas',
+    'Pantalones',
+    'Hoodies',
+    'Chaquetas',
+    'Abrigos',
+    'Zapatos'
+  ],
+  accesorios: [
+    'Lentes',
+    'Joyería',
+    'Bolsas',
+    'Relojes',
+    'Pulseras',
+    'Collares',
+    'Anillos',
+    'Aretes'
+  ]
+};
+
+const SIZE_OPTIONS = {
+  mujer: ['Chico', 'Mediano', 'Grande'],
+  hombre: ['Chico', 'Mediano', 'Grande'],
+  accesorios: ['Única']
+};
+
 const ProductForm = ({ editingProduct, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -14,6 +50,8 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
     stock: '',
     image: '',
     description: '',
+    sale: false,
+    salePrice: '',
   });
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -32,16 +70,35 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
         stock: editingProduct.stock || '',
         image: editingProduct.image || '',
         description: editingProduct.description || '',
+        sale: editingProduct.sale || false,
+        salePrice: editingProduct.salePrice || '',
       });
     }
   }, [editingProduct]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'price' || name === 'stock' ? Number(value) : value,
-    }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === 'checkbox'
+          ? checked
+          : (name === 'price' || name === 'stock' || name === 'salePrice' ? (value === '' ? '' : Number(value)) : value),
+      };
+
+      if (name === 'department') {
+        const typeOpts = TYPE_OPTIONS[value] || [];
+        if (typeOpts.length > 0) {
+          updated.type = typeOpts[0];
+        }
+        const sizeOpts = SIZE_OPTIONS[value] || [];
+        if (sizeOpts.length > 0) {
+          updated.size = sizeOpts[0];
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleFileChange = (e) => {
@@ -63,6 +120,8 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
 
       const productData = {
         ...formData,
+        sale: !!formData.sale,
+        salePrice: formData.sale ? Number(formData.salePrice) : null,
         category: formData.department, // Mantenemos compatibilidad
         image: imageUrl,
       };
@@ -81,6 +140,18 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
       setLoading(false);
     }
   };
+
+  const currentOptions = TYPE_OPTIONS[formData.department] || [];
+  const optionsToRender = [...currentOptions];
+  if (formData.type && !currentOptions.includes(formData.type)) {
+    optionsToRender.unshift(formData.type);
+  }
+
+  const currentSizes = SIZE_OPTIONS[formData.department] || ['Chico', 'Mediano', 'Grande'];
+  const sizesToRender = [...currentSizes];
+  if (formData.size && !currentSizes.includes(formData.size)) {
+    sizesToRender.unshift(formData.size);
+  }
 
   return (
     <div className="product-form-container">
@@ -126,25 +197,50 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
         </div>
 
         <div className="form-group-row">
+          <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', alignSelf: 'center' }}>
+            <input
+              type="checkbox"
+              name="sale"
+              id="sale"
+              checked={formData.sale}
+              onChange={handleChange}
+              style={{ width: 'auto', cursor: 'pointer', margin: 0 }}
+            />
+            <label htmlFor="sale" style={{ cursor: 'pointer', marginBottom: 0 }}>Producto en rebaja</label>
+          </div>
+          {formData.sale && (
+            <div className="form-group">
+              <label>Precio rebajado ($)</label>
+              <input
+                type="number"
+                name="salePrice"
+                value={formData.salePrice}
+                onChange={handleChange}
+                required={formData.sale}
+                min="0"
+                step="0.01"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="form-group-row">
           <div className="form-group">
             <label>Departamento</label>
             <select name="department" value={formData.department} onChange={handleChange} required>
               <option value="mujer">Mujer</option>
               <option value="hombre">Hombre</option>
               <option value="accesorios">Accesorios</option>
-              <option value="rebajas">Rebajas</option>
             </select>
           </div>
           <div className="form-group">
-            <label>Tipo de Prenda</label>
+            <label>Tipo</label>
             <select name="type" value={formData.type} onChange={handleChange} required>
-              <option value="Vestidos">Vestidos</option>
-              <option value="Pantalones">Pantalones</option>
-              <option value="Camisas">Camisas</option>
-              <option value="Abrigos">Abrigos</option>
-              <option value="Zapatos">Zapatos</option>
-              <option value="Faldas">Faldas</option>
-              <option value="Chaquetas">Chaquetas</option>
+              {optionsToRender.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -153,9 +249,11 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
           <div className="form-group">
             <label>Talla</label>
             <select name="size" value={formData.size} onChange={handleChange} required>
-              <option value="Chico">Chico</option>
-              <option value="Mediano">Mediano</option>
-              <option value="Grande">Grande</option>
+              {sizesToRender.map((sizeOption) => (
+                <option key={sizeOption} value={sizeOption}>
+                  {sizeOption}
+                </option>
+              ))}
             </select>
           </div>
           <div className="form-group">

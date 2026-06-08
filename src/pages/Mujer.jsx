@@ -140,8 +140,9 @@ export default function Mujer() {
         {/* Grid de productos */}
         <section className="products-grid">
           {loading ? (
-            /* Renderizado condicional: si está cargando, mostramos el spinner */
-            <div className="loading-spinner">Cargando productos...</div>
+            <div className="loading-container">
+              <div className="spinner"></div>
+            </div>
           ) : filteredProducts.length === 0 ? (
             /* Si no cargamos, pero la lista resultante está vacía, mostramos mensaje */
             <p className="no-results">No hay productos que coincidan con los filtros.</p>

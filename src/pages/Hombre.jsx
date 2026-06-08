@@ -1,91 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Mujer.css';
 import FiltersSidebar from '../components/FiltersSidebar';
 import ProductCard from '../components/ProductCard';
 import useFavourites from '../hooks/useFavourites';
-
-const PRODUCTS = [
-  {
-    id: 101,
-    name: 'Traje Clásico',
-    category: 'Trajes',
-    size: 'Grande',
-    price: 850,
-    material: 'Lana',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 102,
-    name: 'Camisa Oxford',
-    category: 'Camisas',
-    size: 'Mediano',
-    price: 95,
-    material: 'Algodón',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 103,
-    name: 'Pantalón Chino',
-    category: 'Pantalones',
-    size: 'Mediano',
-    price: 130,
-    material: 'Algodón',
-    color: 'Gris',
-    image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 104,
-    name: 'Abrigo Largo',
-    category: 'Abrigos',
-    size: 'Grande',
-    price: 490,
-    material: 'Lana',
-    color: 'Marrón',
-    image: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 105,
-    name: 'Jeans Slim',
-    category: 'Pantalones',
-    size: 'Chico',
-    price: 110,
-    material: 'Algodón',
-    color: 'Azul',
-    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 106,
-    name: 'Polo Piqué',
-    category: 'Camisas',
-    size: 'Mediano',
-    price: 70,
-    material: 'Algodón',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 107,
-    name: 'Chaqueta Blazer',
-    category: 'Trajes',
-    size: 'Grande',
-    price: 340,
-    material: 'Lana',
-    color: 'Gris',
-    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4bca6c?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 108,
-    name: 'Zapato Derby',
-    category: 'Zapatos',
-    size: 'Mediano',
-    price: 195,
-    material: 'Cuero',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400&auto=format&fit=crop',
-  },
-];
+import { getProducts } from '../firebase/firestore';
 
 const categories = ['Trajes', 'Camisas', 'Pantalones', 'Abrigos', 'Zapatos'];
 const sizes = ['Grande', 'Mediano', 'Chico'];
@@ -93,6 +11,8 @@ const materials = ['Lana', 'Algodón', 'Lino', 'Cuero'];
 const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Marrón'];
 
 export default function Hombre() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     category: [],
     size: [],
@@ -103,6 +23,31 @@ export default function Hombre() {
   });
 
   const { isFav, toggle } = useFavourites();
+
+  useEffect(() => {
+    let active = true;
+    
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        if (active) {
+          setProducts(data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error fetching products from Firestore:', error);
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchProducts();
+    
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const toggleArrayFilter = (key, value) => {
     setFilters((prev) => {
@@ -121,14 +66,23 @@ export default function Hombre() {
     setFilters((prev) => ({ ...prev, [name]: Number(value) }));
   };
 
-  const filteredProducts = PRODUCTS.filter((p) => {
+  // Filtrar por departamento "hombre" y normalizar categoría
+  const hombreProducts = products
+    .filter((p) => p.department === 'hombre' || p.category === 'hombre')
+    .map((p) => ({
+      ...p,
+      category: p.type || p.category,
+    }));
+
+  const filteredProducts = hombreProducts.filter((p) => {
     const { category, size, priceMin, priceMax, material, color } = filters;
+    const activePrice = p.sale && p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.price;
     return (
       (category.length === 0 || category.includes(p.category)) &&
       (size.length === 0 || size.includes(p.size)) &&
       (material.length === 0 || material.includes(p.material)) &&
       (color.length === 0 || color.includes(p.color)) &&
-      p.price >= priceMin && p.price <= priceMax
+      activePrice >= priceMin && activePrice <= priceMax
     );
   });
 
@@ -147,7 +101,11 @@ export default function Hombre() {
           colors={colors}
         />
         <section className="products-grid">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <p className="no-results">No hay productos que coincidan con los filtros.</p>
           ) : (
             filteredProducts.map((p) => (

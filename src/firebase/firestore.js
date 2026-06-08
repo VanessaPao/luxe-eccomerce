@@ -50,9 +50,6 @@ export function subscribeFavourites(uid, callback) {
 // CART (para usuarios autenticados)
 // ─────────────────────────────────────────────
 
-/**
- * Agrega o actualiza un item en el carrito del usuario
- */
 export async function addToCart(uid, product, quantity = 1) {
   const ref = doc(db, 'users', uid, 'cart', String(product.id));
   const snap = await getDoc(ref);
@@ -60,10 +57,13 @@ export async function addToCart(uid, product, quantity = 1) {
   if (snap.exists()) {
     await setDoc(ref, { ...snap.data(), quantity: snap.data().quantity + quantity });
   } else {
+    const activePrice = product.sale && product.salePrice !== undefined && product.salePrice !== null
+      ? product.salePrice
+      : product.price;
     await setDoc(ref, {
       productId: String(product.id),
       name: product.name,
-      price: product.price,
+      price: activePrice,
       image: product.image,
       quantity,
       addedAt: serverTimestamp(),
@@ -129,6 +129,14 @@ export async function getProducts() {
   const snap = await getDocs(collection(db, 'products'));
   // Mapeamos los documentos devueltos para incluir el 'id' del documento dentro de sus propiedades
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Obtiene únicamente los productos en rebaja (sale === true)
+ */
+export async function getSaleProducts() {
+  const products = await getProducts();
+  return products.filter((p) => p.sale === true);
 }
 
 

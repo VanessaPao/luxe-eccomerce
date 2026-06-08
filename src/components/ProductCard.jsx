@@ -91,7 +91,18 @@ export default function ProductCard({ product, isFav, onToggleFav }) {
           <div className="product-body-info">
             <h4 className="product-name">{name}</h4>
             <p className="product-category">{category}</p>
-            <p className="product-price">${price}</p>
+            {product.sale && product.salePrice !== undefined && product.salePrice !== null ? (
+              <p className="product-price">
+                <span className="sale-price" style={{ color: '#ffd700', fontWeight: 'bold' }}>
+                  ${product.salePrice}
+                </span>{' '}
+                <span className="original-price" style={{ textDecoration: 'line-through', opacity: 0.5, fontSize: '0.85em', marginLeft: '6px' }}>
+                  ${price}
+                </span>
+              </p>
+            ) : (
+              <p className="product-price">${price}</p>
+            )}
           </div>
 
           {/* Cart button — white circle, black icon */}

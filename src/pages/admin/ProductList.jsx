@@ -43,7 +43,9 @@ const ProductList = ({ onEditProduct }) => {
               <th>Nombre</th>
               <th>Departamento</th>
               <th>Tipo</th>
-              <th>Precio</th>
+              <th>Precio Normal</th>
+              <th>En Rebaja</th>
+              <th>Precio Rebajado</th>
               <th>Stock</th>
               <th>Acciones</th>
             </tr>
@@ -51,7 +53,7 @@ const ProductList = ({ onEditProduct }) => {
           <tbody>
             {products.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center">No hay productos disponibles.</td>
+                <td colSpan="9" className="text-center">No hay productos disponibles.</td>
               </tr>
             ) : (
               products.map((product) => (
@@ -67,6 +69,19 @@ const ProductList = ({ onEditProduct }) => {
                   <td className="capitalize">{product.department || product.category}</td>
                   <td>{product.type || '-'}</td>
                   <td>${product.price}</td>
+                  <td>
+                    <span style={{ 
+                      fontWeight: 'bold', 
+                      color: product.sale ? '#d93025' : '#555',
+                      backgroundColor: product.sale ? '#fce8e6' : '#f1f3f4',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.85rem'
+                    }}>
+                      {product.sale ? 'Rebaja' : 'No'}
+                    </span>
+                  </td>
+                  <td>{product.sale && product.salePrice !== undefined && product.salePrice !== null ? `$${product.salePrice}` : '-'}</td>
                   <td>
                     <span className={`stock-badge ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
                       {product.stock}

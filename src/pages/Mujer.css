@@ -302,14 +302,28 @@
 }
 
 /* ===== LOADING STATE ===== */
-.loading-spinner {
+.loading-container {
   grid-column: 1 / -1;
-  text-align: center;
-  font-size: 1.15rem;
-  color: #ffd700;
-  padding: 4rem 0;
-  letter-spacing: 0.05em;
-  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8rem 0;
+  width: 100%;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.85s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== RESPONSIVE ===== */
