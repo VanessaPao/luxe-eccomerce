@@ -8,6 +8,9 @@ import Rebajas from './pages/Rebajas';
 import Login from './pages/Login';
 import Cart from './pages/Cart';
 import Favourites from './pages/Favourites';
+import Checkout from './pages/Checkout';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -33,6 +36,18 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/carrito" element={<Cart />} />
             <Route path="/favoritos" element={<Favourites />} />
+
+            {/* Checkout & Pagos */}
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/success" element={<PaymentSuccess />} />
+            <Route path="/cancel" element={<PaymentCancel />} />
             
             {/* Admin */}
             <Route 

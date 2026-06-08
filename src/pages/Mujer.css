@@ -301,6 +301,17 @@
   padding: 3rem 0;
 }
 
+/* ===== LOADING STATE ===== */
+.loading-spinner {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 1.15rem;
+  color: #ffd700;
+  padding: 4rem 0;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1280px) {
   .products-grid {

@@ -1,178 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Mujer.css';
+// Importamos el componente de filtros de la barra lateral
 import FiltersSidebar from '../components/FiltersSidebar';
+// Importamos el componente de la tarjeta de producto
 import ProductCard from '../components/ProductCard';
+// Hook personalizado para verificar y alternar productos favoritos en Firestore
 import useFavourites from '../hooks/useFavourites';
+// Función para traer todos los productos de Firestore
+import { getProducts } from '../firebase/firestore';
 
-const PRODUCTS = [
-  {
-    id: 1,
-    name: 'Vestido Elegante',
-    category: 'Vestidos',
-    size: 'Grande',
-    price: 350,
-    material: 'Seda',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1520975912219-2b3c7e5a0b4f?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    name: 'Pantalón Denim',
-    category: 'Pantalones',
-    size: 'Mediano',
-    price: 120,
-    material: 'Algodón',
-    color: 'Azul',
-    image: 'https://images.unsplash.com/photo-1512499617640-71bff8c6ef0d?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 3,
-    name: 'Camisa Blanca',
-    category: 'Camisas',
-    size: 'Chico',
-    price: 80,
-    material: 'Lino',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 4,
-    name: 'Abrigo de Lana',
-    category: 'Abrigos',
-    size: 'Grande',
-    price: 620,
-    material: 'Lana',
-    color: 'Gris',
-    image: 'https://images.unsplash.com/photo-1542068829-1115f725f81a?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 5,
-    name: 'Zapatos de Cuero',
-    category: 'Zapatos',
-    size: 'Mediano',
-    price: 210,
-    material: 'Cuero',
-    color: 'Marrón',
-    image: 'https://images.unsplash.com/photo-1485963631009-8fa4a09e9d9f?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 6,
-    name: 'Falda Plisada',
-    category: 'Faldas',
-    size: 'Chico',
-    price: 95,
-    material: 'Algodón',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1583496661160-fb5218afa9a4?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 7,
-    name: 'Blusa Floral',
-    category: 'Camisas',
-    size: 'Mediano',
-    price: 65,
-    material: 'Lino',
-    color: 'Azul',
-    image: 'https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 8,
-    name: 'Chaqueta Cuero',
-    category: 'Chaquetas',
-    size: 'Grande',
-    price: 480,
-    material: 'Cuero',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 9,
-    name: 'Vestido Midi',
-    category: 'Vestidos',
-    size: 'Mediano',
-    price: 145,
-    material: 'Lino',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 10,
-    name: 'Blazer Sastre',
-    category: 'Chaquetas',
-    size: 'Grande',
-    price: 390,
-    material: 'Lana',
-    color: 'Gris',
-    image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 11,
-    name: 'Top Satinado',
-    category: 'Camisas',
-    size: 'Chico',
-    price: 58,
-    material: 'Seda',
-    color: 'Azul',
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 12,
-    name: 'Pantalón Recto',
-    category: 'Pantalones',
-    size: 'Mediano',
-    price: 135,
-    material: 'Algodón',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1584865288642-42078afe6942?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 13,
-    name: 'Abrigo Largo',
-    category: 'Abrigos',
-    size: 'Grande',
-    price: 560,
-    material: 'Lana',
-    color: 'Marrón',
-    image: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 14,
-    name: 'Falda Plisada',
-    category: 'Faldas',
-    size: 'Chico',
-    price: 92,
-    material: 'Algodón',
-    color: 'Blanco',
-    image: 'https://images.unsplash.com/photo-1583496661160-fb5218afa9a4?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 15,
-    name: 'Zapato Estilo Mary Jane',
-    category: 'Zapatos',
-    size: 'Mediano',
-    price: 225,
-    material: 'Cuero',
-    color: 'Negro',
-    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&auto=format&fit=crop',
-  },
-  {
-    id: 16,
-    name: 'Chaqueta Denim',
-    category: 'Chaquetas',
-    size: 'Mediano',
-    price: 180,
-    material: 'Algodón',
-    color: 'Azul',
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&auto=format&fit=crop',
-  },
-];
-
+// Opciones predefinidas para los filtros (se muestran en la barra lateral)
 const categories = ['Vestidos', 'Pantalones', 'Camisas', 'Abrigos', 'Zapatos', 'Faldas', 'Chaquetas'];
 const sizes = ['Grande', 'Mediano', 'Chico'];
 const materials = ['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero'];
 const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Marrón'];
 
 export default function Mujer() {
+  // Estado para guardar la lista total de productos traídos de Firestore
+  const [products, setProducts] = useState([]);
+  
+  // Estado para controlar si el componente está cargando los datos
+  const [loading, setLoading] = useState(true);
+  
+  // Estado para almacenar los valores de los filtros seleccionados por el usuario
   const [filters, setFilters] = useState({
     category: [],
     size: [],
@@ -182,40 +32,100 @@ export default function Mujer() {
     color: [],
   });
 
+  // Obtenemos las funciones e información del hook de favoritos
   const { isFav, toggle } = useFavourites();
 
+  // Hook useEffect que se ejecuta una sola vez cuando el componente se monta (carga por primera vez)
+  useEffect(() => {
+    // Variable para controlar si el componente sigue montado y evitar fugas de memoria
+    let active = true;
+    
+    // Función interna asíncrona para obtener los productos
+    const fetchProducts = async () => {
+      try {
+        // Obtenemos los productos desde Firestore
+        const data = await getProducts();
+        // Si el componente sigue activo/montado, actualizamos los estados correspondientes
+        if (active) {
+          setProducts(data); // Guardamos los productos en el estado
+          setLoading(false); // Apagamos el indicador de carga
+        }
+      } catch (error) {
+        // En caso de error, lo mostramos en la consola
+        console.error('Error fetching products from Firestore:', error);
+        // Si sigue montado, apagamos el indicador de carga para no dejar al usuario esperando indefinidamente
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    // Ejecutamos la función de carga
+    fetchProducts();
+    
+    // Función de limpieza que se ejecuta cuando el componente se desmonta
+    return () => {
+      active = false; // Marcamos como inactivo para cancelar actualizaciones pendientes
+    };
+  }, []);
+
+  // Función para activar/desactivar filtros de selección múltiple (arreglos)
   const toggleArrayFilter = (key, value) => {
     setFilters((prev) => {
-      const current = new Set(prev[key]);
+      const current = new Set(prev[key]); // Usamos Set para buscar y manipular de forma óptima
+      // Si ya tiene el valor lo quitamos, si no lo tiene lo agregamos
       current.has(value) ? current.delete(value) : current.add(value);
+      // Retornamos el estado anterior pero con la propiedad actualizada como un array limpio
       return { ...prev, [key]: Array.from(current) };
     });
   };
 
+  // Función para vaciar/limpiar un filtro específico (por ejemplo, limpiar todas las categorías)
   const clearFilter = (key) => {
     setFilters((prev) => ({ ...prev, [key]: [] }));
   };
 
+  // Función para manejar el cambio en el rango de precios (mínimo y máximo)
   const handlePriceChange = (e) => {
     const { name, value } = e.target;
+    // Actualizamos el estado de filtros convirtiendo el valor a tipo numérico
     setFilters((prev) => ({ ...prev, [name]: Number(value) }));
   };
 
-  const filteredProducts = PRODUCTS.filter((p) => {
+  // Paso 1: Filtramos los productos para mostrar únicamente los que pertenecen al departamento "mujer"
+  const mujerProducts = products
+    .filter((p) => p.department === 'mujer' || p.category === 'mujer')
+    // Mapeamos el resultado para normalizar el campo 'category' que lee ProductCard y los filtros
+    .map((p) => ({
+      ...p,
+      // Si el producto tiene 'type' (ej. Vestidos), lo usamos como category. Si no, mantenemos el original.
+      category: p.type || p.category,
+    }));
+
+  // Paso 2: Filtramos localmente en el cliente con las opciones seleccionadas en el Sidebar
+  const filteredProducts = mujerProducts.filter((p) => {
     const { category, size, priceMin, priceMax, material, color } = filters;
     return (
+      // Si no hay categorías seleccionadas, pasa el filtro. Si hay, el tipo/categoría debe estar incluido en la lista.
       (category.length === 0 || category.includes(p.category)) &&
+      // Si no hay tallas seleccionadas, pasa. Si hay, la talla del producto debe coincidir.
       (size.length === 0 || size.includes(p.size)) &&
+      // Si no hay materiales seleccionados, pasa. Si hay, el material debe coincidir.
       (material.length === 0 || material.includes(p.material)) &&
+      // Si no hay colores seleccionados, pasa. Si hay, el color debe coincidir.
       (color.length === 0 || color.includes(p.color)) &&
+      // El precio del producto debe estar dentro del rango mínimo y máximo configurado en la barra lateral
       p.price >= priceMin && p.price <= priceMax
     );
   });
 
   return (
     <div className="mujer-page">
+      {/* Título de la página */}
       <h1 className="page-title">Mujer</h1>
+      
       <div className="content-wrapper">
+        {/* Componente lateral de filtros pasando los estados y funciones creadas */}
         <FiltersSidebar
           filters={filters}
           toggleArrayFilter={toggleArrayFilter}
@@ -226,16 +136,23 @@ export default function Mujer() {
           materials={materials}
           colors={colors}
         />
+        
+        {/* Grid de productos */}
         <section className="products-grid">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            /* Renderizado condicional: si está cargando, mostramos el spinner */
+            <div className="loading-spinner">Cargando productos...</div>
+          ) : filteredProducts.length === 0 ? (
+            /* Si no cargamos, pero la lista resultante está vacía, mostramos mensaje */
             <p className="no-results">No hay productos que coincidan con los filtros.</p>
           ) : (
+            /* Si hay productos, mapeamos cada uno y renderizamos su tarjeta de producto */
             filteredProducts.map((p) => (
               <ProductCard
-                key={p.id}
-                product={p}
-                isFav={isFav(p.id)}
-                onToggleFav={toggle}
+                key={p.id} // Clave única requerida por React
+                product={p} // Objeto del producto
+                isFav={isFav(p.id)} // Verifica si está marcado como favorito
+                onToggleFav={toggle} // Función para añadir/remover favoritos en base al ID
               />
             ))
           )}

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { subscribeToAuth } from '../firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const AuthContext = createContext(null);
@@ -11,24 +11,37 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = subscribeToAuth(async (firebaseUser) => {
+    let unsubProfile = null;
+
+    const unsubAuth = subscribeToAuth((firebaseUser) => {
       setUser(firebaseUser);
 
-      if (firebaseUser) {
-        try {
-          const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
-          setProfile(snap.exists() ? snap.data() : null);
-        } catch {
-          setProfile(null);
-        }
-      } else {
-        setProfile(null);
+      // Clean up previous profile subscription if any
+      if (unsubProfile) {
+        unsubProfile();
+        unsubProfile = null;
       }
 
-      setLoading(false);
+      if (firebaseUser) {
+        // Subscribe to user document in Firestore in real-time
+        unsubProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
+          setProfile(snap.exists() ? snap.data() : null);
+          setLoading(false);
+        }, (error) => {
+          console.error("Error subscribing to profile:", error);
+          setProfile(null);
+          setLoading(false);
+        });
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
     });
 
-    return unsub;
+    return () => {
+      unsubAuth();
+      if (unsubProfile) unsubProfile();
+    };
   }, []);
 
   return (

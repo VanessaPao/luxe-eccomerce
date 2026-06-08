@@ -112,15 +112,26 @@ export async function clearUserCart(uid) {
 // PRODUCTS & STOCK
 // ─────────────────────────────────────────────
 
-/**
- * Obtiene todos los productos de una categoría
- */
 export async function getProductsByCategory(category) {
   const snap = await getDocs(collection(db, 'products'));
   return snap.docs
     .map((d) => ({ id: d.id, ...d.data() }))
     .filter((p) => !category || p.category === category);
 }
+
+/**
+ * Obtiene todos los productos de Firestore
+ * - Consulta la colección 'products' en la base de datos (db).
+ * - Mapea cada documento (d) para retornar un objeto con su ID de documento y sus datos (...d.data()).
+ */
+export async function getProducts() {
+  // Obtenemos una captura (snapshot) con todos los documentos de la colección 'products'
+  const snap = await getDocs(collection(db, 'products'));
+  // Mapeamos los documentos devueltos para incluir el 'id' del documento dentro de sus propiedades
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+
 
 /**
  * Escucha productos en tiempo real (con stock actualizado)
@@ -174,4 +185,27 @@ export async function updateProduct(productId, productData) {
 export async function deleteProduct(productId) {
   const ref = doc(db, 'products', String(productId));
   await deleteDoc(ref);
+}
+
+/**
+ * Guarda o actualiza la dirección y teléfono del usuario en Firestore.
+ */
+export async function saveUserAddress(uid, phone, address) {
+  const ref = doc(db, 'users', uid);
+  await setDoc(ref, {
+    phone,
+    address
+  }, { merge: true });
+}
+
+/**
+ * Crea una orden de compra en la colección 'orders'.
+ */
+export async function createOrder(orderData) {
+  const newRef = doc(collection(db, 'orders'));
+  await setDoc(newRef, {
+    ...orderData,
+    createdAt: serverTimestamp()
+  });
+  return newRef.id;
 }

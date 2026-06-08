@@ -1,9 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import CheckoutAuthModal from '../components/CheckoutAuthModal';
 import './Cart.css';
 
 export default function Cart() {
   const { items, removeItem, updateQty, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Al presionar "Proceder al pago", verificamos si el usuario está autenticado
+  const handleCheckoutClick = () => {
+    if (!user) {
+      setShowAuthModal(true);
+    } else {
+      navigate('/checkout');
+    }
+  };
+
+  // Si el usuario se autentica mientras el modal está abierto, redirigir automáticamente
+  useEffect(() => {
+    if (user && showAuthModal) {
+      setShowAuthModal(false);
+      navigate('/checkout');
+    }
+  }, [user, showAuthModal, navigate]);
 
   if (items.length === 0) {
     return (
@@ -67,7 +90,7 @@ export default function Cart() {
             <span>Total</span>
             <span>${totalPrice.toFixed(2)}</span>
           </div>
-          <button className="cart-checkout-btn">
+          <button className="cart-checkout-btn" onClick={handleCheckoutClick}>
             Proceder al pago
           </button>
           <button className="cart-clear-btn" onClick={clearCart}>
@@ -75,6 +98,17 @@ export default function Cart() {
           </button>
         </aside>
       </div>
+
+      {/* Modal de autenticación en checkout si el usuario no tiene sesión */}
+      {showAuthModal && (
+        <CheckoutAuthModal
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={() => {
+            setShowAuthModal(false);
+            navigate('/checkout');
+          }}
+        />
+      )}
     </div>
   );
 }

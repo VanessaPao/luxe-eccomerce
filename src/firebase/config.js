@@ -5,6 +5,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,4 +22,12 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const functions = getFunctions(app);
+
+// En desarrollo local, redirige las llamadas al emulador de Functions
+// El emulador corre en http://127.0.0.1:5001
+if (import.meta.env.DEV) {
+  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+}
+
 export default app;

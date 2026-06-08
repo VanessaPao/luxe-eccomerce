@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# ─── Firebase deploy artifacts ─────────────────────────────────────────────────
+.firebase/
+firebase-debug.log
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -35,3 +39,6 @@ E-commerce/
 # ─── Imágenes pegadas de Obsidian ──────────────────────────────────────────────
 **/Pasted image*.png
 **/Pasted image*.jpg
+
+# ─── Firebase Functions keys (NUNCA subir) ──────────────────────────────────────
+functions/.env
