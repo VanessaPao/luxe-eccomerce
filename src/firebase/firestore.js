@@ -152,15 +152,37 @@ export function subscribeProducts(callback) {
 }
 
 /**
- * Reduce stock al confirmar compra (transacción segura)
+ * Reduce stock al confirmar compra (transacción segura).
+ *
+ * NOTA: En producción, el stock se actualiza desde la Cloud Function
+ * verifyStripePayment (servidor). Esta función existe como utilidad
+ * de cliente para casos de uso adicionales (ej. reservas temporales).
+ *
+ * La transacción garantiza que:
+ * 1. Se lee el stock actual de forma bloqueada.
+ * 2. Se valida que hay stock suficiente.
+ * 3. Se escribe el nuevo valor atómicamente.
+ * Si dos llamadas ocurren al mismo tiempo, Firestore reintenta
+ * automáticamente y solo una verá el stock sin modificar.
  */
 export async function decrementStock(productId, quantity = 1) {
   const ref = doc(db, 'products', String(productId));
   await runTransaction(db, async (tx) => {
+    // Paso 1: Leer el documento dentro de la transacción (bloqueado)
     const snap = await tx.get(ref);
+
+    // Paso 2: Validar que el producto existe
     if (!snap.exists()) throw new Error('Producto no encontrado');
-    const current = snap.data().stock || 0;
-    if (current < quantity) throw new Error('Stock insuficiente');
+
+    const current = snap.data().stock ?? 0;
+
+    // Paso 3: Validar stock suficiente (nunca permitir negativos)
+    if (current < quantity) {
+      throw new Error(`Stock insuficiente. Disponible: ${current}, solicitado: ${quantity}`);
+    }
+
+    // Paso 4: Escribir el nuevo stock — esto FALTABA en la versión original
+    tx.update(ref, { stock: current - quantity });
   });
 }
 

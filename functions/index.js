@@ -117,7 +117,53 @@ exports.verifyStripePayment = onCall(async (request) => {
         createdAt: new Date(),
       });
 
-      // Limpiar el pedido temporal
+      // ─────────────────────────────────────────────────────────────────
+      // ACTUALIZAR STOCK — una transacción por producto comprado.
+      //
+      // ¿Qué es una transacción de Firestore?
+      // Es una operación que lee y escribe un documento de forma ATÓMICA.
+      // Si dos personas compran el mismo producto al mismo tiempo, Firestore
+      // garantiza que solo una podrá completarse exitosamente. La otra verá
+      // el stock ya actualizado y fallará si no hay suficiente. Esto evita
+      // vender más unidades de las disponibles ("condición de carrera").
+      // ─────────────────────────────────────────────────────────────────
+      const stockUpdates = pendingData.items.map((item) => {
+        // Referencia al documento del producto en la colección 'products'
+        const productRef = db.collection("products").doc(String(item.productId));
+
+        return db.runTransaction(async (tx) => {
+          // 1. Leer el documento del producto DENTRO de la transacción.
+          //    Firestore bloquea este documento hasta que la transacción termine.
+          const productSnap = await tx.get(productRef);
+
+          // 2. Validar que el producto existe en la base de datos.
+          if (!productSnap.exists) {
+            throw new Error(`Producto "${item.name}" (ID: ${item.productId}) no encontrado en el catálogo.`);
+          }
+
+          // 3. Obtener el stock actual. Si el campo no existe, se asume 0.
+          const currentStock = productSnap.data().stock ?? 0;
+          const quantityBought = item.quantity || 1;
+
+          // 4. Validar que hay suficiente stock. Nunca permitir stock negativo.
+          if (currentStock < quantityBought) {
+            throw new Error(
+              `Stock insuficiente para "${item.name}". ` +
+              `Disponible: ${currentStock}, solicitado: ${quantityBought}.`
+            );
+          }
+
+          // 5. Escribir el nuevo valor de stock de forma atómica.
+          //    Solo se ejecuta si todas las validaciones anteriores pasaron.
+          tx.update(productRef, { stock: currentStock - quantityBought });
+        });
+      });
+
+      // Ejecutar todas las actualizaciones de stock en paralelo.
+      // Si CUALQUIERA falla (ej. stock insuficiente), Promise.all lanza un error.
+      await Promise.all(stockUpdates);
+
+      // Limpiar el pedido temporal (solo se llega aquí si el stock fue suficiente)
       await db.collection("pending_orders").doc(sessionId).delete();
 
       return { success: true, orderId: orderRef.id };
