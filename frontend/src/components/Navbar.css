@@ -1,0 +1,213 @@
+.luxe-navbar {
+  background-color: var(--bg-navbar) !important;
+  font-family: var(--sans);
+  padding: 15px 40px !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.luxe-brand {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text-primary) !important;
+  text-decoration: none;
+  margin-right: 40px;
+}
+
+.luxe-profile-btn {
+  margin-right: 16px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.luxe-profile-btn i {
+  font-size: 20px;
+}
+
+.luxe-nav-link {
+  color: var(--text-nav) !important;
+  font-weight: 500;
+  font-size: 15px;
+  margin-right: 25px;
+  transition: all 0.2s ease-in-out;
+  border-bottom: 2px solid transparent;
+  padding: 4px 0 !important;
+}
+
+.luxe-nav-link:hover,
+.luxe-nav-link.active {
+  color: var(--text-primary) !important;
+  border-bottom: 2px solid var(--text-primary) !important;
+}
+
+.luxe-search-container {
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+}
+
+.luxe-search-input {
+  background-color: var(--bg-input) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: 50px !important;
+  padding: 10px 20px 10px 48px !important;
+  color: var(--text-primary) !important;
+  font-size: 14px;
+  font-weight: 400;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.luxe-search-input::placeholder {
+  color: var(--text-placeholder) !important;
+}
+
+.luxe-search-input:focus {
+  background-color: var(--bg-input-focus) !important;
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 0 0 0.2rem rgba(128, 128, 128, 0.05) !important;
+  outline: none;
+}
+
+.luxe-search-icon {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.luxe-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.luxe-icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+
+.luxe-icon-btn:hover {
+  background-color: var(--bg-hover-strong);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.luxe-icon-btn i {
+  font-size: 18px;
+}
+
+.luxe-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 18px;
+  height: 18px;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-medium);
+}
+
+.luxe-toggler {
+  border: none !important;
+  padding: 0 !important;
+}
+
+.luxe-toggler:focus {
+  box-shadow: none !important;
+}
+
+.luxe-toggler-icon {
+  background-image: none !important;
+  position: relative;
+  width: 24px;
+  height: 2px;
+  background-color: var(--text-primary);
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.luxe-toggler-icon::before,
+.luxe-toggler-icon::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background-color: var(--text-primary);
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.luxe-toggler-icon::before {
+  top: -8px;
+}
+
+.luxe-toggler-icon::after {
+  top: 8px;
+}
+
+.luxe-dropdown-menu {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--accent-gold-border) !important;
+  box-shadow: var(--shadow-lg);
+}
+
+.luxe-dropdown-text {
+  color: var(--text-muted-strong) !important;
+}
+
+.luxe-dropdown-item {
+  color: var(--text-primary) !important;
+  transition: background 0.2s;
+}
+
+.luxe-dropdown-item:hover {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+.luxe-dropdown-divider {
+  border-color: var(--border-color) !important;
+}
+
+@media (max-width: 991.98px) {
+  .luxe-navbar {
+    padding: 15px 20px !important;
+  }
+
+  .luxe-search-container {
+    max-width: 100%;
+    margin: 15px 0;
+  }
+
+  .luxe-actions-group {
+    justify-content: flex-start;
+    margin-top: 10px;
+  }
+
+  .luxe-nav-link {
+    margin-right: 0;
+    padding: 10px 0 !important;
+  }
+}

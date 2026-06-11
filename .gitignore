@@ -1,4 +1,4 @@
-# Logs
+# ─── Logs ──────────────────────────────────────────────────────────────────────
 logs
 *.log
 npm-debug.log*
@@ -7,16 +7,30 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# ─── Dependencias ───────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Build output ───────────────────────────────────────────────────────────────
+dist/
+dist-ssr/
 *.local
 
 # ─── Firebase deploy artifacts ─────────────────────────────────────────────────
 .firebase/
 firebase-debug.log
 
-# Editor directories and files
+# ─── Variables de entorno (NUNCA subir) ────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Firebase Functions keys (NUNCA subir) ──────────────────────────────────────
+functions/.env
+
+# ─── Firebase Admin SDK (NUNCA subir — equivale a contraseña maestra) ───────────
+backend/serviceAccountKey.json
+
+# ─── Editor / OS ────────────────────────────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -27,18 +41,8 @@ firebase-debug.log
 *.sln
 *.sw?
 
-# ─── Variables de entorno (NUNCA subir) ────────────────────────────────────────
-.env
-.env.*
-!.env.example
-
-# ─── Notas personales / Obsidian vault (basura para el repo) ───────────────────
+# ─── Notas personales / Obsidian vault ─────────────────────────────────────────
 E-commerce/
 **/.obsidian/
-
-# ─── Imágenes pegadas de Obsidian ──────────────────────────────────────────────
 **/Pasted image*.png
 **/Pasted image*.jpg
-
-# ─── Firebase Functions keys (NUNCA subir) ──────────────────────────────────────
-functions/.env

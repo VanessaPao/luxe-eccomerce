@@ -1,0 +1,32 @@
+.hero {
+  padding: 60px 20px;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+button {
+  padding: 12px 24px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.hero {
+  padding: 80px 40px;
+}
+
+.hero h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.hero p {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.hero button {
+  padding: 12px 24px;
+  margin-right: 12px;
+}
