@@ -27,8 +27,14 @@ const app = express();
 // ── Configuración de CORS ─────────────────────────────────────────────
 // Esencial para conectar frontend y backend en distintos puertos.
 // Permite que el navegador del usuario haga peticiones a este servidor.
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-app.use(cors({ origin: frontendUrl }));
+// Acepta múltiples orígenes separados por coma
+const allowedOrigins = (
+  process.env.FRONTEND_URL ||
+  'http://localhost:5173,https://luxe-c582e.web.app,https://luxe-c582e.firebaseapp.com'
+)
+  .split(',')
+  .map((url) => url.trim());
+app.use(cors({ origin: allowedOrigins }));
 
 // ── Documentación Swagger ────────────────────────────────────────────
 // Sirve la interfaz de Swagger UI en la ruta /api-docs
