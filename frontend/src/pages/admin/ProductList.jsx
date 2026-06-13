@@ -1,23 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { subscribeProducts, deleteProduct } from '../../firebase/firestore';
+import { API_BASE_URL } from '../../utils/api';
 
-const ProductList = ({ onEditProduct }) => {
+const ProductList = ({ onEditProduct, refreshKey }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = subscribeProducts((data) => {
-      setProducts(data);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/products`);
+        if (!res.ok) throw new Error('Error al obtener productos');
+        const data = await res.json();
+        setProducts(data);
+      } catch (err) {
+        console.error('Error cargando productos:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [refreshKey]);
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       try {
-        await deleteProduct(id);
+        const res = await fetch(`${API_BASE_URL}/api/products/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error al eliminar');
+        setProducts(prev => prev.filter(p => p.id !== id));
       } catch (error) {
         console.error('Error al eliminar producto:', error);
         alert('No se pudo eliminar el producto.');

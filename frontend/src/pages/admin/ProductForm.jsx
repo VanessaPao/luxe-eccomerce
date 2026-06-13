@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { uploadImageToCloudinary } from '../../utils/cloudinary';
-import { createProduct, updateProduct } from '../../firebase/firestore';
+import { API_BASE_URL } from '../../utils/api';
 
 const TYPE_OPTIONS = {
   mujer: [
@@ -127,9 +127,19 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
       };
 
       if (editingProduct) {
-        await updateProduct(editingProduct.id, productData);
+        const res = await fetch(`${API_BASE_URL}/api/products/${editingProduct.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+        });
+        if (!res.ok) throw new Error('Error al actualizar producto');
       } else {
-        await createProduct(productData);
+        const res = await fetch(`${API_BASE_URL}/api/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData),
+        });
+        if (!res.ok) throw new Error('Error al crear producto');
       }
 
       onSave();

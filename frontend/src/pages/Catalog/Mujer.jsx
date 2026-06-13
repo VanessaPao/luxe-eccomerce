@@ -7,7 +7,7 @@ import ProductCard from '../../components/ProductCard';
 // Hook personalizado para verificar y alternar productos favoritos en Firestore
 import useFavourites from '../../hooks/useFavourites';
 // Función para traer todos los productos de Firestore
-import { getProducts } from '../../firebase/firestore';
+import { API_BASE_URL } from '../../utils/api';
 
 // Opciones predefinidas para los filtros (se muestran en la barra lateral)
 const categories = ['Vestidos', 'Pantalones', 'Camisas', 'Abrigos', 'Zapatos', 'Faldas', 'Chaquetas'];
@@ -44,7 +44,9 @@ export default function Mujer() {
     const fetchProducts = async () => {
       try {
         // Obtenemos los productos desde Firestore
-        const data = await getProducts();
+        const res = await fetch(`${API_BASE_URL}/api/products`);
+        if (!res.ok) throw new Error('Error al obtener productos');
+        const data = await res.json();
         // Si el componente sigue activo/montado, actualizamos los estados correspondientes
         if (active) {
           setProducts(data); // Guardamos los productos en el estado
@@ -52,7 +54,7 @@ export default function Mujer() {
         }
       } catch (error) {
         // En caso de error, lo mostramos en la consola
-        console.error('Error fetching products from Firestore:', error);
+        console.error('Error fetching products:', error);
         // Si sigue montado, apagamos el indicador de carga para no dejar al usuario esperando indefinidamente
         if (active) {
           setLoading(false);

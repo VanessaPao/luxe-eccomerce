@@ -17,6 +17,7 @@ import ordersRouter from "./routes/orders.js";
 import checkoutRouter from "./routes/checkout.js";
 import chatRouter from "./routes/chat.js";
 import supportRouter from "./routes/support.js"; // <-- NUEVO: Panel de soporte
+import cartRouter from "./routes/cart.js";
 
 // express() crea una "aplicación". Piénsala como el núcleo del servidor:
 // es el objeto que recibe peticiones (requests) y devuelve respuestas (responses).
@@ -95,6 +96,7 @@ app.use("/api/chat", chatRouter);
 
 // NUEVO: Registramos el router de soporte bajo el prefijo "/api/support"
 app.use("/api/support", supportRouter);
+app.use("/api/cart", cartRouter);
 
 // app.listen() es el momento en que el servidor "prende".
 // Le decimos: "escucha en el puerto 3001 y cuando estés listo, ejecuta esta función".

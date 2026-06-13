@@ -1,12 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import {
-  addToCart,
-  removeFromCart,
-  updateCartQuantity,
-  subscribeCart,
-  clearUserCart,
-} from '../firebase/firestore';
+import { API_BASE_URL } from '../utils/api';
+import { subscribeCart } from '../firebase/firestore';
 
 const CartContext = createContext(null);
 
@@ -33,7 +28,17 @@ export function CartProvider({ children }) {
       if (guestItems.length > 0) {
         Promise.all(
           guestItems.map((item) =>
-            addToCart(user.uid, item, item.quantity)
+            fetch(`${API_BASE_URL}/api/cart/${user.uid}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                productId: item.productId,
+                name: item.name,
+                price: item.price,
+                image: item.image,
+                quantity: item.quantity,
+              }),
+            })
           )
         ).then(() => {
           localStorage.removeItem(GUEST_KEY);
@@ -52,7 +57,20 @@ export function CartProvider({ children }) {
   /* ── Agregar al carrito ── */
   const addItem = useCallback(async (product, quantity = 1) => {
     if (user) {
-      await addToCart(user.uid, product, quantity);
+      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: String(product.id),
+          name: product.name,
+          price: product.sale && product.salePrice ? product.salePrice : product.price,
+          image: product.image,
+          quantity,
+          sale: product.sale,
+          salePrice: product.salePrice,
+        }),
+      });
+      if (!res.ok) throw new Error('Error al agregar al carrito');
     } else {
       setItems((prev) => {
         const existing = prev.find((i) => i.productId === String(product.id));
@@ -87,7 +105,8 @@ export function CartProvider({ children }) {
   /* ── Eliminar del carrito ── */
   const removeItem = useCallback(async (productId) => {
     if (user) {
-      await removeFromCart(user.uid, productId);
+      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}/${productId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar del carrito');
     } else {
       setItems((prev) => {
         const next = prev.filter((i) => i.productId !== String(productId));
@@ -100,7 +119,12 @@ export function CartProvider({ children }) {
   /* ── Actualizar cantidad ── */
   const updateQty = useCallback(async (productId, quantity) => {
     if (user) {
-      await updateCartQuantity(user.uid, productId, quantity);
+      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity }),
+      });
+      if (!res.ok) throw new Error('Error al actualizar cantidad');
     } else {
       setItems((prev) => {
         const next = quantity <= 0
@@ -117,7 +141,8 @@ export function CartProvider({ children }) {
   /* ── Vaciar carrito ── */
   const clearCart = useCallback(async () => {
     if (user) {
-      await clearUserCart(user.uid);
+      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al vaciar carrito');
     } else {
       localStorage.removeItem(GUEST_KEY);
       setItems([]);

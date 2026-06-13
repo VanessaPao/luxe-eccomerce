@@ -31,8 +31,10 @@ router.get("/tickets", async (req, res) => {
     const tickets = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() ?? null,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() ?? null,
+      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() ?? doc.data().createdAt ?? null,
+      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() ?? doc.data().updatedAt ?? null,
+      assignedAt: doc.data().assignedAt?.toDate?.()?.toISOString() ?? doc.data().assignedAt ?? null,
+      resolvedAt: doc.data().resolvedAt?.toDate?.()?.toISOString() ?? doc.data().resolvedAt ?? null,
     }));
 
     res.status(200).json(tickets);
@@ -79,8 +81,10 @@ router.get("/tickets/user/:userId", async (req, res) => {
     const tickets = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() ?? null,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() ?? null,
+      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() ?? doc.data().createdAt ?? null,
+      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() ?? doc.data().updatedAt ?? null,
+      assignedAt: doc.data().assignedAt?.toDate?.()?.toISOString() ?? doc.data().assignedAt ?? null,
+      resolvedAt: doc.data().resolvedAt?.toDate?.()?.toISOString() ?? doc.data().resolvedAt ?? null,
     }));
 
     res.status(200).json(tickets);
@@ -149,6 +153,14 @@ router.post("/tickets", async (req, res) => {
       status: "open", // open | in_progress | resolved | closed
       createdAt: new Date(),
       updatedAt: new Date(),
+      activityLog: [
+        {
+          type: "ticket_created",
+          userId,
+          userName: userName || "Cliente",
+          timestamp: new Date().toISOString()
+        }
+      ]
     };
 
     const ref = await db.collection("supportTickets").add(newTicket);
@@ -198,7 +210,7 @@ router.post("/tickets", async (req, res) => {
 router.post("/tickets/:id/reply", async (req, res) => {
   try {
     const { id } = req.params;
-    const { senderRole, senderName, text, status } = req.body;
+    const { senderId, senderRole, senderName, text, status } = req.body;
 
     if (!text) {
       return res.status(400).json({ error: "El texto de la respuesta es requerido." });
@@ -211,6 +223,35 @@ router.post("/tickets/:id/reply", async (req, res) => {
       return res.status(404).json({ error: "Ticket no encontrado." });
     }
 
+    const ticketData = ticketSnap.data();
+    const currentActivityLog = ticketData.activityLog || [];
+    const newActivityLog = [...currentActivityLog];
+
+    // Asignar automáticamente cuando un agente responde por primera vez
+    let assignmentUpdate = {};
+    if ((senderRole === "support" || senderRole === "admin") && !ticketData.assignedTo) {
+      const assignmentTime = new Date();
+      assignmentUpdate = {
+        assignedTo: senderId || "unknown_agent",
+        assignedToName: senderName || "Agente Soporte",
+        assignedAt: assignmentTime
+      };
+      newActivityLog.push({
+        type: "assigned",
+        userId: senderId || "unknown_agent",
+        userName: senderName || "Agente Soporte",
+        timestamp: assignmentTime.toISOString()
+      });
+    }
+
+    // Registrar reply_sent en el historial de actividad
+    newActivityLog.push({
+      type: "reply_sent",
+      userId: senderId || (senderRole === "user" ? ticketData.userId : "unknown_agent"),
+      userName: senderName || "Usuario",
+      timestamp: new Date().toISOString()
+    });
+
     const newMessage = {
       sender: senderRole || "support",
       senderName: senderName || "Agente LUXE",
@@ -219,8 +260,10 @@ router.post("/tickets/:id/reply", async (req, res) => {
     };
 
     const updateData = {
-      messages: [...(ticketSnap.data().messages || []), newMessage],
+      messages: [...(ticketData.messages || []), newMessage],
       updatedAt: new Date(),
+      activityLog: newActivityLog,
+      ...assignmentUpdate
     };
 
     if (status) updateData.status = status;
@@ -267,22 +310,201 @@ router.post("/tickets/:id/reply", async (req, res) => {
 router.patch("/tickets/:id/status", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, changedById, changedByName, changedByRole } = req.body;
 
     const validStatuses = ["open", "in_progress", "resolved", "closed"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Estado inválido." });
     }
 
-    await db.collection("supportTickets").doc(id).update({
-      status,
-      updatedAt: new Date(),
+    const ticketRef = db.collection("supportTickets").doc(id);
+    const ticketSnap = await ticketRef.get();
+
+    if (!ticketSnap.exists) {
+      return res.status(404).json({ error: "Ticket no encontrado." });
+    }
+
+    const ticketData = ticketSnap.data();
+    const currentActivityLog = ticketData.activityLog || [];
+    const newActivityLog = [...currentActivityLog];
+
+    const changeTime = new Date();
+    let resolutionUpdate = {};
+    let eventType = "status_changed";
+
+    if (status === "resolved" || status === "closed") {
+      eventType = status; // "resolved" o "closed"
+      resolutionUpdate = {
+        resolvedBy: changedById || "unknown_agent",
+        resolvedByName: changedByName || "Agente Soporte",
+        resolvedAt: changeTime
+      };
+    }
+
+    newActivityLog.push({
+      type: eventType,
+      userId: changedById || "system",
+      userName: changedByName || "Sistema/Agente",
+      timestamp: changeTime.toISOString()
     });
+
+    const updateData = {
+      status,
+      updatedAt: changeTime,
+      activityLog: newActivityLog,
+      ...resolutionUpdate
+    };
+
+    await db.collection("supportTickets").doc(id).update(updateData);
 
     res.status(200).json({ message: `Estado actualizado a '${status}'.` });
   } catch (error) {
     console.error("Error actualizando estado:", error);
     res.status(500).json({ error: "Error al actualizar el estado del ticket." });
+  }
+});
+
+/**
+ * @openapi
+ * /api/support/admin/metrics:
+ *   get:
+ *     tags: [Soporte]
+ *     summary: Obtener métricas y auditoría de soporte para el administrador
+ *     description: Calcula en el servidor el resumen general, estadísticas por agente, ranking y tiempos promedio de resolución.
+ *     responses:
+ *       200:
+ *         description: Métricas calculadas correctamente
+ *       500:
+ *         description: Error del servidor
+ */
+router.get("/admin/metrics", async (req, res) => {
+  try {
+    // 1. Obtener todos los tickets
+    const ticketsSnapshot = await db.collection("supportTickets").get();
+    const tickets = ticketsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() ?? data.createdAt ?? null,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? data.updatedAt ?? null,
+        assignedAt: data.assignedAt?.toDate?.()?.toISOString() ?? data.assignedAt ?? null,
+        resolvedAt: data.resolvedAt?.toDate?.()?.toISOString() ?? data.resolvedAt ?? null,
+      };
+    });
+
+    // 2. Obtener todos los agentes/admins de la colección users
+    const usersSnapshot = await db.collection("users")
+      .where("role", "in", ["support", "admin"])
+      .get();
+    const agentsList = usersSnapshot.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data()
+    }));
+
+    // Combinar agentes con los que están registrados en tickets pero no en base de datos
+    const allAgentsMap = {};
+    agentsList.forEach(a => {
+      allAgentsMap[a.uid] = {
+        uid: a.uid,
+        name: `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.email || 'Agente de Soporte',
+        role: a.role,
+        email: a.email
+      };
+    });
+
+    tickets.forEach(t => {
+      if (t.assignedTo && !allAgentsMap[t.assignedTo]) {
+        allAgentsMap[t.assignedTo] = {
+          uid: t.assignedTo,
+          name: t.assignedToName || 'Agente Histórico',
+          role: 'support',
+          email: ''
+        };
+      }
+    });
+
+    const allAgents = Object.values(allAgentsMap);
+
+    // 3. Calcular métricas globales
+    const totalOpen = tickets.filter(t => t.status === 'open').length;
+    const totalInProgress = tickets.filter(t => t.status === 'in_progress').length;
+    const totalResolved = tickets.filter(t => t.status === 'resolved').length;
+    const totalClosed = tickets.filter(t => t.status === 'closed').length;
+
+    const resolvedTickets = tickets.filter(t => (t.status === 'resolved' || t.status === 'closed') && t.assignedAt && t.resolvedAt);
+    const globalResolutionTime = resolvedTickets.length > 0
+      ? resolvedTickets.reduce((sum, t) => sum + (new Date(t.resolvedAt) - new Date(t.assignedAt)), 0) / resolvedTickets.length
+      : 0;
+
+    const STATUS_LABELS = {
+      open: 'Abierto',
+      in_progress: 'En Progreso',
+      resolved: 'Resuelto',
+      closed: 'Cerrado',
+    };
+
+    // 4. Calcular métricas por agente
+    const agentMetrics = allAgents.map(agent => {
+      const assignedTickets = tickets.filter(t => t.assignedTo === agent.uid);
+      const open = assignedTickets.filter(t => t.status === 'open').length;
+      const inProgress = assignedTickets.filter(t => t.status === 'in_progress').length;
+      const resolved = assignedTickets.filter(t => t.status === 'resolved').length;
+      const closed = assignedTickets.filter(t => t.status === 'closed').length;
+
+      let lastActivityTime = null;
+      let lastActivityDesc = 'Sin actividad';
+
+      tickets.forEach(t => {
+        if (!Array.isArray(t.activityLog)) return;
+        t.activityLog.forEach(log => {
+          if (!log || typeof log !== 'object') return;
+          if (log.userId === agent.uid) {
+            const logTime = new Date(log.timestamp);
+            if (!lastActivityTime || logTime > lastActivityTime) {
+              lastActivityTime = logTime;
+              const subject = (t.subject || 'Sin asunto').slice(0, 20);
+              lastActivityDesc = `${STATUS_LABELS[log.type] || log.type} (${subject}...)`;
+            }
+          }
+        });
+      });
+
+      const agentResolved = assignedTickets.filter(t => (t.status === 'resolved' || t.status === 'closed') && t.assignedAt && t.resolvedAt);
+      const avgResTime = agentResolved.length > 0
+        ? agentResolved.reduce((sum, t) => sum + (new Date(t.resolvedAt) - new Date(t.assignedAt)), 0) / agentResolved.length
+        : 0;
+
+      return {
+        ...agent,
+        assignedCount: assignedTickets.length,
+        openCount: open + inProgress,
+        resolvedCount: resolved,
+        closedCount: closed,
+        totalFinished: resolved + closed,
+        lastActivityTime: lastActivityTime ? lastActivityTime.toISOString() : null,
+        lastActivityDesc,
+        avgResTime
+      };
+    });
+
+    const agentRanking = [...agentMetrics].sort((a, b) => b.totalFinished - a.totalFinished);
+
+    res.status(200).json({
+      summary: {
+        open: totalOpen,
+        in_progress: totalInProgress,
+        resolved: totalResolved,
+        closed: totalClosed,
+        globalResolutionTime
+      },
+      agentMetrics,
+      agentRanking,
+      tickets
+    });
+  } catch (error) {
+    console.error("Error obteniendo métricas de soporte:", error);
+    res.status(500).json({ error: "Error al obtener las métricas de soporte." });
   }
 });
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../utils/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, doc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import './ChatPopup.css';
 
@@ -126,33 +126,45 @@ function SupportChat({ user, profile }) {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
 
-  // ── Suscripción en tiempo real ─────────────────────────────────────────────
-  useEffect(() => {
+  // ── Cargar lista de tickets vía Backend ─────────────────────────────────────
+  const fetchTickets = async () => {
     if (!user) return;
-    const q = query(
-      collection(db, 'supportTickets'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      const list = snap.docs.map(d => {
-        const data = d.data();
-        return {
-          id: d.id,
-          ...data,
-          createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? null,
-        };
-      });
-      setTickets(list);
-      // Actualizar ticket activo en tiempo real cuando llega una respuesta
-      setActiveTicket(prev => {
-        if (!prev) return null;
-        return list.find(t => t.id === prev.id) || prev;
-      });
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/support/tickets/user/${user.uid}`);
+      if (res.ok) {
+        const list = await res.json();
+        setTickets(list);
+        setActiveTicket(prev => {
+          if (!prev) return null;
+          return list.find(t => t.id === prev.id) || prev;
+        });
+      }
+    } catch (err) {
+      console.error('Error cargando tickets:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, [user]);
+
+  // ── Snapshot en tiempo real SOLO para el ticket activo (chat en vivo) ──────
+  useEffect(() => {
+    if (!activeTicket) return;
+    const unsub = onSnapshot(doc(db, 'supportTickets', activeTicket.id), (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const updated = {
+        id: snap.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? null,
+      };
+      setActiveTicket(updated);
+      setTickets(prev => prev.map(t => t.id === updated.id ? updated : t));
     });
     return () => unsub();
-  }, [user]);
+  }, [activeTicket?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -162,28 +174,25 @@ function SupportChat({ user, profile }) {
     if (!newSubject.trim() || !newMessage.trim()) return;
     setCreating(true);
     try {
-      const ref = await addDoc(collection(db, 'supportTickets'), {
-        userId: user.uid,
-        userName: profile?.firstName ? `${profile.firstName} ${profile.lastName || ''}`.trim() : user.displayName || 'Cliente',
-        userEmail: user.email || '',
-        subject: newSubject.trim(),
-        messages: [{
-          sender: 'user',
-          senderName: profile?.firstName || 'Cliente',
-          text: newMessage.trim(),
-          timestamp: new Date().toISOString(),
-        }],
-        status: 'open',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+      const clientName = profile?.firstName ? `${profile.firstName} ${profile.lastName || ''}`.trim() : user.displayName || 'Cliente';
+      const res = await fetch(`${API_BASE_URL}/api/support/tickets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.uid,
+          userName: clientName,
+          userEmail: user.email || '',
+          subject: newSubject.trim(),
+          message: newMessage.trim(),
+        }),
       });
+      if (!res.ok) throw new Error('Error al crear ticket');
+      const { id } = await res.json();
       setNewSubject('');
       setNewMessage('');
       setShowForm(false);
-      // El onSnapshot lo añadirá a la lista; solo hacemos auto-select esperando
-      setTimeout(() => {
-        setActiveTicket(prev => prev || { id: ref.id });
-      }, 500);
+      await fetchTickets();
+      setActiveTicket({ id });
     } catch (err) {
       console.error('Error creando ticket:', err);
     } finally {
@@ -195,16 +204,16 @@ function SupportChat({ user, profile }) {
     if (!replyText.trim() || !activeTicket) return;
     setSending(true);
     try {
-      const newMsg = {
-        sender: 'user',
-        senderName: profile?.firstName || 'Cliente',
-        text: replyText.trim(),
-        timestamp: new Date().toISOString(),
-      };
-      await updateDoc(doc(db, 'supportTickets', activeTicket.id), {
-        messages: arrayUnion(newMsg),
-        updatedAt: serverTimestamp(),
-        status: 'open',
+      const clientName = profile?.firstName || 'Cliente';
+      await fetch(`${API_BASE_URL}/api/support/tickets/${activeTicket.id}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderId: user.uid,
+          senderRole: 'user',
+          senderName: clientName,
+          text: replyText.trim(),
+        }),
       });
       setReplyText('');
     } catch (err) {

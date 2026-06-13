@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../utils/api';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import './SupportDashboard.css';
 
@@ -34,49 +34,55 @@ export default function SupportDashboard() {
 
   const isSupport = profile?.role === 'support' || profile?.role === 'admin';
 
-  // ── Suscripción en tiempo real a los tickets (Chat en vivo) ──────────────────
-  useEffect(() => {
+  // ── Cargar lista de tickets vía Backend ─────────────────────────────────────
+  const fetchTickets = async ({ initial = false } = {}) => {
     if (!user) return;
-
-    let q;
-    if (isSupport) {
-      q = query(collection(db, 'supportTickets'), orderBy('createdAt', 'desc'));
-    } else {
-      q = query(
-        collection(db, 'supportTickets'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
+    if (initial) setLoading(true);
+    try {
+      let url;
+      if (isSupport) {
+        url = `${API_BASE_URL}/api/support/tickets`;
+      } else {
+        url = `${API_BASE_URL}/api/support/tickets/user/${user.uid}`;
+      }
+      const res = await fetch(url);
+      if (res.ok) {
+        const list = await res.json();
+        setTickets(list);
+        setSelected(prev => {
+          if (!prev) return null;
+          const updated = list.find(t => t.id === prev.id);
+          return updated || prev;
+        });
+      }
+    } catch (err) {
+      console.error('Error cargando tickets:', err);
+    } finally {
+      if (initial) setLoading(false);
     }
+  };
 
-    setLoading(true);
-    const unsubscribe = onSnapshot(q, (snap) => {
-      const list = snap.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate?.()?.toISOString() ?? data.createdAt ?? null,
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? data.updatedAt ?? null,
-        };
-      });
-      setTickets(list);
-      
-      // Actualizar el ticket seleccionado con los nuevos mensajes en tiempo real
-      setSelected(prevSelected => {
-        if (!prevSelected) return null;
-        const updated = list.find(t => t.id === prevSelected.id);
-        return updated || prevSelected;
-      });
-      
-      setLoading(false);
-    }, (err) => {
-      console.error('Error escuchando tickets:', err);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+  useEffect(() => {
+    fetchTickets({ initial: true });
   }, [user, isSupport]);
+
+  // ── Snapshot en tiempo real SOLO para el ticket seleccionado (chat en vivo) ──
+  useEffect(() => {
+    if (!selected) return;
+    const unsub = onSnapshot(doc(db, 'supportTickets', selected.id), (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const updated = {
+        id: snap.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() ?? data.createdAt ?? null,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? data.updatedAt ?? null,
+      };
+      setSelected(updated);
+      setTickets(prev => prev.map(t => t.id === updated.id ? updated : t));
+    });
+    return () => unsub();
+  }, [selected?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -91,11 +97,21 @@ export default function SupportDashboard() {
   const handleSelectTicket = (ticket) => { setSelected(ticket); setReply(''); };
 
   const handleStatusChange = async (ticketId, newStatus) => {
-    await fetch(`${API_BASE_URL}/api/support/tickets/${ticketId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    });
+    try {
+      await fetch(`${API_BASE_URL}/api/support/tickets/${ticketId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          changedById: user?.uid,
+          changedByName: profile?.name || user?.email || 'Agente',
+          changedByRole: profile?.role || 'support'
+        }),
+      });
+      await fetchTickets();
+    } catch (err) {
+      console.error('Error cambiando estado:', err);
+    }
   };
 
   const handleSendReply = async () => {
@@ -106,6 +122,7 @@ export default function SupportDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          senderId: user?.uid,
           senderRole: profile?.role || 'user',
           senderName: profile?.name || user?.email || 'Cliente',
           text: reply.trim(),
@@ -138,6 +155,7 @@ export default function SupportDashboard() {
         setNewSubject('');
         setNewMessage('');
         setShowNewTicket(false);
+        await fetchTickets();
       }
     } catch (err) {
       console.error('Error creating ticket:', err);

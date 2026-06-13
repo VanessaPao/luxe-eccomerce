@@ -3,7 +3,7 @@ import './Mujer.css';
 import FiltersSidebar from '../../components/Layout/FiltersSidebar';
 import ProductCard from '../../components/ProductCard';
 import useFavourites from '../../hooks/useFavourites';
-import { getSaleProducts } from '../../firebase/firestore';
+import { API_BASE_URL } from '../../utils/api';
 
 const categories = ['Vestidos', 'Pantalones', 'Camisas', 'Abrigos', 'Zapatos', 'Faldas', 'Chaquetas', 'Trajes', 'Bolsos', 'Cinturones', 'Joyería', 'Gafas', 'Pañuelos', 'Sombreros'];
 const sizes = ['Grande', 'Mediano', 'Chico'];
@@ -29,13 +29,15 @@ export default function Rebajas() {
     
     const fetchProducts = async () => {
       try {
-        const data = await getSaleProducts();
+        const res = await fetch(`${API_BASE_URL}/api/products/sale`);
+        if (!res.ok) throw new Error('Error al obtener productos en rebaja');
+        const data = await res.json();
         if (active) {
           setProducts(data);
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error fetching sale products from Firestore:', error);
+        console.error('Error fetching sale products:', error);
         if (active) {
           setLoading(false);
         }

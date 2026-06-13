@@ -41,6 +41,9 @@ backend/serviceAccountKey.json
 *.sln
 *.sw?
 
+# ─── Windows reserved names ──────────────────────────────────────────────
+nul
+
 # ─── Notas personales / Obsidian vault ─────────────────────────────────────────
 E-commerce/
 **/.obsidian/

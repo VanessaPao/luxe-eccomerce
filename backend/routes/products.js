@@ -11,6 +11,7 @@ import {
   editProduct,
   removeProduct,
 } from "../controllers/productController.js";
+import { getAllProducts } from "../models/productModel.js";
 
 const router = express.Router();
 
@@ -42,6 +43,19 @@ const router = express.Router();
  *                   example: "Error al obtener los productos."
  */
 router.get("/", getProducts);
+
+router.get("/sale", async (req, res) => {
+  try {
+    const products = await getAllProducts();
+    if (Array.isArray(products)) {
+      return res.json(products.filter(p => p.sale === true));
+    }
+    res.json([]);
+  } catch (error) {
+    console.error("Error obteniendo productos en rebaja:", error);
+    res.status(500).json({ error: "Error al obtener productos en rebaja." });
+  }
+});
 
 /**
  * @openapi

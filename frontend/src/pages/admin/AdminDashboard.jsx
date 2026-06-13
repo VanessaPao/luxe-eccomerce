@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ProductList from './ProductList';
 import ProductForm from './ProductForm';
+import SupportSupervision from './SupportSupervision';
 import { useAuth } from '../../context/AuthContext';
 import './Admin.css';
 
@@ -9,6 +10,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('products');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleOpenForm = (product = null) => {
     setEditingProduct(product);
@@ -18,6 +20,7 @@ const AdminDashboard = () => {
   const handleCloseForm = () => {
     setEditingProduct(null);
     setIsFormOpen(false);
+    setRefreshKey(k => k + 1);
   };
 
   return (
@@ -40,13 +43,24 @@ const AdminDashboard = () => {
           >
             🛍️ Productos
           </button>
-          {/* Aquí podrías añadir más tabs como Usuarios, Pedidos, etc. */}
+          <button 
+            className={`admin-nav-item ${activeTab === 'support' ? 'active' : ''}`}
+            onClick={() => setActiveTab('support')}
+          >
+            🎧 Supervisión Soporte
+          </button>
         </nav>
       </aside>
 
       <main className="admin-main">
         <header className="admin-header">
-          <h1>{activeTab === 'products' ? 'Gestión de Productos' : 'Panel de Control'}</h1>
+          <h1>
+            {activeTab === 'products' 
+              ? 'Gestión de Productos' 
+              : activeTab === 'support' 
+                ? 'Supervisión de Soporte' 
+                : 'Panel de Control'}
+          </h1>
           {activeTab === 'products' && !isFormOpen && (
             <button className="btn-primary" onClick={() => handleOpenForm()}>
               + Añadir Producto
@@ -73,10 +87,12 @@ const AdminDashboard = () => {
                   onCancel={handleCloseForm} 
                 />
               ) : (
-                <ProductList onEditProduct={handleOpenForm} />
+                <ProductList onEditProduct={handleOpenForm} refreshKey={refreshKey} />
               )}
             </>
           )}
+
+          {activeTab === 'support' && <SupportSupervision />}
         </div>
       </main>
     </div>
