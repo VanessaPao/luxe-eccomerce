@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../firebase/auth';
+import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../../firebase/auth';
 import './AuthModal.css'; // Reuses modal backdrop/styling
-import '../pages/Login.css'; // Reuses login card and input styling
+import '../../pages/Auth/Login.css'; // Reuses login card and input styling
 
 export default function CheckoutAuthModal({ onClose, onSuccess }) {
   const [mode, setMode] = useState('login'); // 'login' | 'register'

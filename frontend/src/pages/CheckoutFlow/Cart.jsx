@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import CheckoutAuthModal from '../components/CheckoutAuthModal';
+import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
+import CheckoutAuthModal from '../../components/Modals/CheckoutAuthModal';
 import './Cart.css';
 
 export default function Cart() {

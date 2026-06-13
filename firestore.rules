@@ -79,5 +79,29 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ─────────────────────────────────────────────────────────
+    // Colección: supportTickets/{ticketId}
+    // ─────────────────────────────────────────────────────────
+    match /supportTickets/{ticketId} {
+      // Un usuario puede leer sus propios tickets; los de rol 'support' o 'admin' pueden leer todos
+      allow read: if isAuth() && (
+        resource == null || 
+        resource.data.userId == request.auth.uid || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'support' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      // Cualquiera autenticado puede crear un ticket asignado a su propio UID
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      // Permite actualizar mensajes o estado si es el dueño, soporte o admin
+      allow update: if isAuth() && (
+        resource.data.userId == request.auth.uid || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'support' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+      allow delete: if isAuth() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
   }
 }

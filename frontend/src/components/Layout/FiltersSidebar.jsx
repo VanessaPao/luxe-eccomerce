@@ -1,5 +1,5 @@
 import React from 'react';
-import '../pages/Mujer.css';
+import '../../pages/Catalog/Mujer.css';
 
 const COLOR_MAP = {
   Negro: '#000000',

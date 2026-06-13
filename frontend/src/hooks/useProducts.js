@@ -16,6 +16,7 @@
 // para todos los casos sin tener que escribir 4 fetchs distintos.
 
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../utils/api';
 
 /**
  * useProducts — obtiene productos desde GET /api/products (Express → Firestore).
@@ -55,7 +56,7 @@ export default function useProducts({ department, saleOnly } = {}) {
         // Durante desarrollo, Vite intercepta esta URL y la redirige a
         // http://localhost:3001/api/products gracias al proxy que configuramos
         // en vite.config.js. En producción apuntará al servidor real.
-        const response = await fetch('/api/products');
+        const response = await fetch(`${API_BASE_URL}/api/products`);
 
         // Si el servidor respondió con un código de error (4xx, 5xx),
         // response.ok será false. Lanzamos un error manualmente para

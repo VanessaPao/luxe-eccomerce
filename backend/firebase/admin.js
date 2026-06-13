@@ -32,14 +32,21 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 // Cargamos las credenciales de la Service Account.
-// La ruta "../serviceAccountKey.json" sube un nivel desde firebase/ → server/
-// y encuentra el archivo que descargaste de la consola de Firebase.
-//
-// ⚠️ Si este archivo no existe, el servidor lanzará un error aquí mismo.
-//    Eso es intencional: sin credenciales no tiene sentido arrancar.
-const serviceAccount = require(
-  path.join(__dirname, "../serviceAccountKey.json")
-);
+// En producción (Render), se recomienda usar una variable de entorno para no subir credenciales al repositorio.
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } catch (err) {
+    console.error("Error al parsear FIREBASE_SERVICE_ACCOUNT env var:", err.message);
+    throw err;
+  }
+} else {
+  const require = createRequire(import.meta.url);
+  serviceAccount = require(
+    path.join(__dirname, "../serviceAccountKey.json")
+  );
+}
 
 // Inicialización del Admin SDK.
 // getApps().length > 0 previene que se inicialice dos veces si Node recarga

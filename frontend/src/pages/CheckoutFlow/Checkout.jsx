@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import { saveUserAddress } from '../firebase/firestore';
-import { functions } from '../firebase/config';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import { saveUserAddress } from '../../firebase/firestore';
+import { functions } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
+import { API_BASE_URL } from '../../utils/api';
 import './Checkout.css';
 
 export default function Checkout() {
@@ -116,37 +117,35 @@ export default function Checkout() {
 
     try {
       if (paymentMethod === 'stripe') {
-        // Inicializar función de Cloud Functions para Stripe
-        const createCheckoutSessionFn = httpsCallable(functions, 'createCheckoutSession');
-
-        // Mapear items del carrito al formato requerido por Stripe
-        const checkoutItems = items.map((i) => ({
-          productId: i.productId || i.id,
-          name: i.name,
-          price: i.price,
-          quantity: i.quantity || 1,
-          image: i.image,
-        }));
-
-        const result = await createCheckoutSessionFn({
-          items: checkoutItems,
-          userId: user.uid,
-          shippingAddress: {
-            phone,
-            address,
+        // En lugar de usar Cloud Functions, ahora llamamos a nuestro servidor Express
+        const response = await fetch(`${API_BASE_URL}/api/checkout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
+          // Pasamos los productos y la información del usuario al backend Express
+          body: JSON.stringify({
+            items,
+            userId: user.uid,
+            shippingAddress: { phone, address }
+          }),
         });
 
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Error al conectar con el servidor.');
+        }
+
+        const data = await response.json();
+
         // Redirigir a la sesión de Checkout de Stripe
-        if (result.data && result.data.url) {
-          window.location.href = result.data.url;
+        if (data.url) {
+          window.location.href = data.url;
         } else {
           throw new Error('No se recibió la URL de pago de Stripe.');
         }
       } else {
-        // Simulación para Mercado Pago
-        // Creamos la orden directamente como simulación exitosa
-        const createOrderFn = httpsCallable(functions, 'simulateMercadoPagoOrder');
+        // Simulación para Mercado Pago con Express
         const checkoutItems = items.map((i) => ({
           productId: i.productId || i.id,
           name: i.name,
@@ -155,20 +154,30 @@ export default function Checkout() {
           image: i.image,
         }));
 
-        const result = await createOrderFn({
-          items: checkoutItems,
-          total: totalPrice,
-          userId: user.uid,
-          shippingAddress: {
-            phone,
-            address,
-          },
+        const response = await fetch(`${API_BASE_URL}/api/checkout/mercadopago`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: checkoutItems,
+            total: totalPrice,
+            userId: user.uid,
+            shippingAddress: {
+              phone,
+              address,
+            },
+          }),
         });
 
-        if (result.data && result.data.orderId) {
-          navigate(`/success?order_id=${result.data.orderId}&method=mercadopago`);
+        if (!response.ok) {
+          throw new Error('Error al simular orden de Mercado Pago en el servidor.');
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.orderId) {
+          navigate(`/success?order_id=${data.orderId}&method=mercadopago`);
         } else {
-          throw new Error('Error al simular orden de Mercado Pago.');
+          throw new Error('No se generó el ID de la orden para Mercado Pago.');
         }
       }
     } catch (err) {

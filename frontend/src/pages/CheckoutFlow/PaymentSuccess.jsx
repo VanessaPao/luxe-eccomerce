@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import { functions, db } from '../firebase/config';
+import { useCart } from '../../context/CartContext';
+import { functions, db } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
+import { API_BASE_URL } from '../../utils/api';
 import './PaymentStatus.css';
 
 export default function PaymentSuccess() {
@@ -25,13 +26,18 @@ export default function PaymentSuccess() {
     const processPayment = async () => {
       try {
         if (sessionId) {
-          // --- Flujo de Stripe ---
-          // Llamamos a la Cloud Function para verificar el pago y crear la orden en Firestore de forma segura
-          const verifyStripePaymentFn = httpsCallable(functions, 'verifyStripePayment');
-          const result = await verifyStripePaymentFn({ sessionId });
+          // --- Flujo de Stripe Express ---
+          // Llamamos al servidor Express para verificar el pago y crear la orden en Firestore de forma segura
+          const response = await fetch(`${API_BASE_URL}/api/checkout/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId }),
+          });
 
-          if (result.data && result.data.success) {
-            const dbOrderId = result.data.orderId;
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            const dbOrderId = data.orderId;
             if (active) {
               setOrderId(dbOrderId);
               // Obtener los detalles de la orden creada para mostrarlos en pantalla
@@ -122,7 +128,7 @@ export default function PaymentSuccess() {
         <div className="status-icon-wrapper success">
           <span className="status-icon">✓</span>
         </div>
-        
+
         <h2 className="status-title success">¡Compra Completada!</h2>
         <p className="status-text">
           Tu pago ha sido procesado de forma segura y tu pedido está en camino.

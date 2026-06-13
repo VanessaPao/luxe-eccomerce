@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../firebase/auth';
+import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../../firebase/auth';
 import './Login.css';
 
 export default function Login() {

@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import { logout } from '../firebase/auth';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import { logout } from '../../firebase/auth';
+import { useTheme } from '../../context/ThemeContext';
 import './Navbar.css';
 
 function Navbar() {
@@ -129,6 +129,18 @@ function Navbar() {
                                             </Link>
                                         </li>
                                     )}
+                                    {(profile?.role === 'support' || profile?.role === 'admin') && (
+                                        <li>
+                                            <Link className="dropdown-item luxe-dropdown-item" to="/soporte">
+                                                <i className="bi bi-headset" style={{ marginRight: '8px' }}></i>Panel Soporte
+                                            </Link>
+                                        </li>
+                                    )}
+                                    <li>
+                                        <Link className="dropdown-item luxe-dropdown-item" to="/mis-tickets">
+                                            <i className="bi bi-ticket-perforated" style={{ marginRight: '8px' }}></i>Mis Tickets
+                                        </Link>
+                                    </li>
                                     <li><hr className="dropdown-divider luxe-dropdown-divider" /></li>
                                     <li><button className="dropdown-item luxe-dropdown-item text-danger" onClick={handleLogout}>Cerrar sesión</button></li>
                                 </ul>

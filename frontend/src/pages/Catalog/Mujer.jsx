@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './Mujer.css';
 // Importamos el componente de filtros de la barra lateral
-import FiltersSidebar from '../components/FiltersSidebar';
+import FiltersSidebar from '../../components/Layout/FiltersSidebar';
 // Importamos el componente de la tarjeta de producto
-import ProductCard from '../components/ProductCard';
+import ProductCard from '../../components/ProductCard';
 // Hook personalizado para verificar y alternar productos favoritos en Firestore
-import useFavourites from '../hooks/useFavourites';
+import useFavourites from '../../hooks/useFavourites';
 // Función para traer todos los productos de Firestore
-import { getProducts } from '../firebase/firestore';
+import { getProducts } from '../../firebase/firestore';
 
 // Opciones predefinidas para los filtros (se muestran en la barra lateral)
 const categories = ['Vestidos', 'Pantalones', 'Camisas', 'Abrigos', 'Zapatos', 'Faldas', 'Chaquetas'];

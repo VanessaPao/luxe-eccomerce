@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import useProduct from '../hooks/useProduct';
-import { useCart } from '../context/CartContext';
+import useProduct from '../../hooks/useProduct';
+import { useCart } from '../../context/CartContext';
 import './ProductDetail.css';
 
 export default function ProductDetail() {

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './Mujer.css';
-import FiltersSidebar from '../components/FiltersSidebar';
-import ProductCard from '../components/ProductCard';
-import useFavourites from '../hooks/useFavourites';
-import { getProducts } from '../firebase/firestore';
+import FiltersSidebar from '../../components/Layout/FiltersSidebar';
+import ProductCard from '../../components/ProductCard';
+import useFavourites from '../../hooks/useFavourites';
+import { getSaleProducts } from '../../firebase/firestore';
 
-const categories = ['Trajes', 'Camisas', 'Pantalones', 'Abrigos', 'Zapatos'];
+const categories = ['Vestidos', 'Pantalones', 'Camisas', 'Abrigos', 'Zapatos', 'Faldas', 'Chaquetas', 'Trajes', 'Bolsos', 'Cinturones', 'Joyería', 'Gafas', 'Pañuelos', 'Sombreros'];
 const sizes = ['Grande', 'Mediano', 'Chico'];
-const materials = ['Lana', 'Algodón', 'Lino', 'Cuero'];
+const materials = ['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero', 'Metal', 'Perla', 'Paja'];
 const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Marrón'];
 
-export default function Hombre() {
+export default function Rebajas() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -29,13 +29,13 @@ export default function Hombre() {
     
     const fetchProducts = async () => {
       try {
-        const data = await getProducts();
+        const data = await getSaleProducts();
         if (active) {
           setProducts(data);
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error fetching products from Firestore:', error);
+        console.error('Error fetching sale products from Firestore:', error);
         if (active) {
           setLoading(false);
         }
@@ -66,15 +66,13 @@ export default function Hombre() {
     setFilters((prev) => ({ ...prev, [name]: Number(value) }));
   };
 
-  // Filtrar por departamento "hombre" y normalizar categoría
-  const hombreProducts = products
-    .filter((p) => p.department === 'hombre' || p.category === 'hombre')
-    .map((p) => ({
-      ...p,
-      category: p.type || p.category,
-    }));
+  // Normalizar los productos para que category contenga el type (ej. Vestidos)
+  const normalizedProducts = products.map((p) => ({
+    ...p,
+    category: p.type || p.category,
+  }));
 
-  const filteredProducts = hombreProducts.filter((p) => {
+  const filteredProducts = normalizedProducts.filter((p) => {
     const { category, size, priceMin, priceMax, material, color } = filters;
     const activePrice = p.sale && p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.price;
     return (
@@ -88,7 +86,7 @@ export default function Hombre() {
 
   return (
     <div className="mujer-page">
-      <h1 className="page-title">Hombre</h1>
+      <h1 className="page-title">Rebajas</h1>
       <div className="content-wrapper">
         <FiltersSidebar
           filters={filters}

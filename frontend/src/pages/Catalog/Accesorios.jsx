@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './Mujer.css';
-import FiltersSidebar from '../components/FiltersSidebar';
-import ProductCard from '../components/ProductCard';
-import useFavourites from '../hooks/useFavourites';
-import { getProducts } from '../firebase/firestore';
+import FiltersSidebar from '../../components/Layout/FiltersSidebar';
+import ProductCard from '../../components/ProductCard';
+import useFavourites from '../../hooks/useFavourites';
+import { getProducts } from '../../firebase/firestore';
 
 const categories = ['Bolsos', 'Cinturones', 'Joyería', 'Gafas', 'Pañuelos', 'Sombreros'];
 const sizes = ['Grande', 'Mediano', 'Chico'];

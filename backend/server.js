@@ -5,18 +5,29 @@
 // Eso le dice a Node.js que este proyecto usa ES Modules (la sintaxis moderna),
 // la misma que usas en React. Sin esa línea en package.json, tendrías que
 // escribir: const express = require("express")
+import 'dotenv/config'; // <-- NUEVO: Carga las variables del archivo .env automáticamente
 import express from "express";
+import cors from "cors"; // <-- NUEVO: Permite peticiones cruzadas (CORS)
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./swagger.js";
 
 // Importamos los routers de los endpoints.
 import productsRouter from "./routes/products.js";
 import ordersRouter from "./routes/orders.js";
+import checkoutRouter from "./routes/checkout.js";
+import chatRouter from "./routes/chat.js";
+import supportRouter from "./routes/support.js"; // <-- NUEVO: Panel de soporte
 
 // express() crea una "aplicación". Piénsala como el núcleo del servidor:
 // es el objeto que recibe peticiones (requests) y devuelve respuestas (responses).
 // Una sola aplicación puede manejar miles de rutas y middlewares.
 const app = express();
+
+// ── Configuración de CORS ─────────────────────────────────────────────
+// Esencial para conectar frontend y backend en distintos puertos.
+// Permite que el navegador del usuario haga peticiones a este servidor.
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({ origin: frontendUrl }));
 
 // ── Documentación Swagger ────────────────────────────────────────────
 // Sirve la interfaz de Swagger UI en la ruta /api-docs
@@ -74,6 +85,16 @@ app.use("/api/products", productsRouter);
 // Registramos el router de órdenes bajo el prefijo "/api/orders".
 // Cualquier petición POST a http://localhost:3001/api/orders será dirigida aquí.
 app.use("/api/orders", ordersRouter);
+
+// NUEVO: Registramos el router de checkout bajo el prefijo "/api/checkout".
+// Aquí recibiremos la petición POST para crear la sesión de Stripe.
+app.use("/api/checkout", checkoutRouter);
+
+// NUEVO: Registramos el router de chat bajo el prefijo \"/api/chat\"
+app.use("/api/chat", chatRouter);
+
+// NUEVO: Registramos el router de soporte bajo el prefijo "/api/support"
+app.use("/api/support", supportRouter);
 
 // app.listen() es el momento en que el servidor "prende".
 // Le decimos: "escucha en el puerto 3001 y cuando estés listo, ejecuta esta función".

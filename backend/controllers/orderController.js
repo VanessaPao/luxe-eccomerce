@@ -55,7 +55,17 @@ export async function create(req, res) {
       orderId,
     });
   } catch (error) {
-    console.error("❌ Error al guardar la orden en Firestore:", error);
+    console.error("❌ Error al procesar la orden en Firestore:", error);
+
+    // Si es un error de validación de negocio conocido, devolvemos 400 Bad Request
+    const errorPrefixes = ["PRODUCT_NOT_FOUND:", "INVALID_STOCK:", "INSUFFICIENT_STOCK:", "NEGATIVE_STOCK:"];
+    const isValidationError = errorPrefixes.some(prefix => error.message && error.message.startsWith(prefix));
+
+    if (isValidationError) {
+      const cleanMessage = error.message.substring(error.message.indexOf(":") + 1).trim();
+      return res.status(400).json({ error: cleanMessage });
+    }
+
     res.status(500).json({ error: "Error interno del servidor al procesar la orden." });
   }
 }

@@ -27,3 +27,49 @@ export async function getProductById(id) {
   if (!docSnap.exists) return null;
   return { id: docSnap.id, ...docSnap.data() };
 }
+
+/**
+ * Crea un nuevo producto en Firestore.
+ * @param {Object} productData - Datos del producto
+ * @returns {Promise<string>} ID del producto creado
+ */
+export async function createProduct(productData) {
+  const docRef = await db.collection("products").add({
+    ...productData,
+    createdAt: new Date(),
+  });
+  return docRef.id;
+}
+
+/**
+ * Actualiza un producto existente en Firestore.
+ * @param {string} id - ID del producto
+ * @param {Object} productData - Campos a actualizar
+ * @returns {Promise<boolean>} true si se actualizó, false si no existía el producto
+ */
+export async function updateProduct(id, productData) {
+  const docRef = db.collection("products").doc(id);
+  const docSnap = await docRef.get();
+  if (!docSnap.exists) return false;
+
+  await docRef.update({
+    ...productData,
+    updatedAt: new Date(),
+  });
+  return true;
+}
+
+/**
+ * Elimina un producto de Firestore.
+ * @param {string} id - ID del producto
+ * @returns {Promise<boolean>} true si se eliminó, false si no existía el producto
+ */
+export async function deleteProduct(id) {
+  const docRef = db.collection("products").doc(id);
+  const docSnap = await docRef.get();
+  if (!docSnap.exists) return false;
+
+  await docRef.delete();
+  return true;
+}
+

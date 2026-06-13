@@ -10,6 +10,7 @@
 // Separarlos mantiene cada hook pequeño, predecible y fácil de testear.
 
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../utils/api';
 
 /**
  * useProduct — obtiene un producto específico desde GET /api/products/:id
@@ -50,7 +51,7 @@ export default function useProduct(id) {
         // Construimos la URL con el ID interpolado.
         // El proxy de Vite (vite.config.js) redirige /api/* a http://localhost:3001
         // durante desarrollo, así que aquí escribimos solo la ruta relativa.
-        const response = await fetch(`/api/products/${id}`);
+        const response = await fetch(`${API_BASE_URL}/api/products/${id}`);
 
         // ── Caso 404: el producto no existe ────────────────────────────────
         // fetch() NO lanza un error automáticamente con 404 o 500.

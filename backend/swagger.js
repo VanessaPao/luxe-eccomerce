@@ -33,9 +33,37 @@ Además de esta API Express, el proyecto usa **Cloud Functions para pagos**:
       { name: "General", description: "Endpoints generales del servidor" },
       { name: "Productos", description: "Gestión de productos del catálogo" },
       { name: "Órdenes", description: "Creación de órdenes de compra" },
+      { name: "Checkout", description: "Integración con pasarelas de pago" },
+      { name: "Chatbot", description: "Asistente de Inteligencia Artificial" },
+      { name: "Soporte", description: "Panel de Tickets y Soporte Técnico" },
     ],
     components: {
       schemas: {
+        Ticket: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "ID del ticket en Firestore" },
+            userId: { type: "string", description: "UID del cliente" },
+            userName: { type: "string", description: "Nombre del cliente" },
+            userEmail: { type: "string", description: "Email del cliente" },
+            subject: { type: "string", description: "Asunto del ticket" },
+            status: { type: "string", enum: ["open", "in_progress", "resolved", "closed"] },
+            messages: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  sender: { type: "string", enum: ["user", "support"] },
+                  senderName: { type: "string" },
+                  text: { type: "string" },
+                  timestamp: { type: "string", format: "date-time" },
+                }
+              }
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          }
+        },
         Product: {
           type: "object",
           properties: {

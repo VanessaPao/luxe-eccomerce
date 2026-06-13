@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({ children, requireAdmin = false, requireSupport = false }) => {
   const { user, profile, loading } = useAuth();
 
   if (loading) {
@@ -14,7 +14,11 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   }
 
   if (requireAdmin && profile?.role !== 'admin') {
-    // Si requiere admin y no es admin, redirige al inicio
+    return <Navigate to="/" replace />;
+  }
+
+  // Permite acceso a soporte tanto al rol 'support' como al 'admin'
+  if (requireSupport && profile?.role !== 'support' && profile?.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 
