@@ -145,6 +145,7 @@ router.post("/tickets", async (req, res) => {
       messages: [
         {
           sender: "user",
+          senderId: userId,
           senderName: userName || "Cliente",
           text: message,
           timestamp: new Date().toISOString(),
@@ -254,6 +255,7 @@ router.post("/tickets/:id/reply", async (req, res) => {
 
     const newMessage = {
       sender: senderRole || "support",
+      senderId: senderId || ticketData.userId || "unknown",
       senderName: senderName || "Agente LUXE",
       text,
       timestamp: new Date().toISOString(),

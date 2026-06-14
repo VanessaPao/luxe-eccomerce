@@ -3,6 +3,7 @@ import ProductList from './ProductList';
 import ProductForm from './ProductForm';
 import SupportSupervision from './SupportSupervision';
 import { useAuth } from '../../context/AuthContext';
+import { BarChart3, ShoppingBag, Headphones } from 'lucide-react';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -35,19 +36,19 @@ const AdminDashboard = () => {
             className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('dashboard')}
           >
-            📊 Dashboard
+            <BarChart3 size={16} /> Dashboard
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => setActiveTab('products')}
           >
-            🛍️ Productos
+            <ShoppingBag size={16} /> Productos
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'support' ? 'active' : ''}`}
             onClick={() => setActiveTab('support')}
           >
-            🎧 Supervisión Soporte
+            <Headphones size={16} /> Supervisión Soporte
           </button>
         </nav>
       </aside>

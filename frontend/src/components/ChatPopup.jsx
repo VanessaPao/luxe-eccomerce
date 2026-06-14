@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { Lock, Bot, Headphones, Ticket, X, Send } from 'lucide-react';
 import './ChatPopup.css';
 
 /* ─── AI Chat Tab ─────────────────────────────────────────────────────────── */
@@ -108,7 +109,7 @@ function AiChat() {
           onChange={(e) => setInputText(e.target.value)}
           disabled={isLoading}
         />
-        <button type="submit" className="chat-send-btn" disabled={isLoading || !inputText.trim()}>➔</button>
+        <button type="submit" className="chat-send-btn" disabled={isLoading || !inputText.trim()}><Send size={16} /></button>
       </form>
     </>
   );
@@ -229,7 +230,7 @@ function SupportChat({ user, profile }) {
   if (!user) {
     return (
       <div className="support-chat-empty">
-        <div className="support-chat-empty-icon">🔐</div>
+        <div className="support-chat-empty-icon"><Lock size={32} /></div>
         <p>Inicia sesión para contactar a soporte</p>
       </div>
     );
@@ -264,7 +265,7 @@ function SupportChat({ user, profile }) {
             onClick={handleCreateTicket}
             disabled={creating || !newSubject.trim() || !newMessage.trim()}
           >
-            {creating ? 'Enviando...' : '✦ Enviar Solicitud'}
+            {creating ? 'Enviando...' : 'Enviar Solicitud'}
           </button>
         </div>
       </div>
@@ -287,9 +288,9 @@ function SupportChat({ user, profile }) {
         </div>
         <div className="support-live-messages">
           {(ticket.messages || []).map((msg, i) => (
-            <div key={i} className={`support-msg-bubble ${msg.sender === 'user' ? 'mine' : 'theirs'}`}>
+            <div key={i} className={`support-msg-bubble ${msg.senderId === user?.uid || (!msg.senderId && msg.sender === 'user') ? 'mine' : 'theirs'}`}>
               <span className="support-msg-name">
-                {msg.sender === 'user' ? 'Tú' : `🎧 ${msg.senderName || 'Soporte LUXE'}`}
+                {msg.senderId === user?.uid || (!msg.senderId && msg.sender === 'user') ? 'Tú' : msg.senderName || 'Soporte LUXE'}
               </span>
               <div className="support-msg-text">{msg.text}</div>
               <span className="support-msg-time">
@@ -319,7 +320,7 @@ function SupportChat({ user, profile }) {
               onClick={handleSendReply}
               disabled={sending || !replyText.trim()}
             >
-              ➔
+              <Send size={16} />
             </button>
           </div>
         ) : (
@@ -341,7 +342,7 @@ function SupportChat({ user, profile }) {
       <div className="support-ticket-scroll">
         {tickets.length === 0 ? (
           <div className="support-chat-empty">
-            <div className="support-chat-empty-icon">🎫</div>
+            <div className="support-chat-empty-icon"><Ticket size={32} /></div>
             <p>No tienes tickets todavía</p>
             <button className="support-send-btn" style={{ marginTop: '1rem' }} onClick={() => setShowForm(true)}>
               Contactar Soporte
@@ -377,7 +378,7 @@ export default function ChatPopup() {
     <>
       {/* FAB */}
       <button className="chat-fab" onClick={() => setIsOpen(!isOpen)} aria-label="Abrir chat">
-        {isOpen ? '✕' : '✨'}
+        {isOpen ? <X size={20} /> : <Bot size={20} />}
       </button>
 
       {/* Widget */}
@@ -395,7 +396,7 @@ export default function ChatPopup() {
               </p>
             </div>
           </div>
-          <button className="chat-close-btn" onClick={() => setIsOpen(false)} aria-label="Cerrar chat">✕</button>
+          <button className="chat-close-btn" onClick={() => setIsOpen(false)} aria-label="Cerrar chat"><X size={18} /></button>
         </div>
 
         {/* Tabs */}
@@ -404,13 +405,13 @@ export default function ChatPopup() {
             className={`chat-tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
             onClick={() => setActiveTab('ai')}
           >
-            ✨ Asistente IA
+            <Bot size={14} /> Asistente IA
           </button>
           <button
             className={`chat-tab-btn ${activeTab === 'support' ? 'active' : ''}`}
             onClick={() => setActiveTab('support')}
           >
-            🎧 Soporte
+            <Headphones size={14} /> Soporte
           </button>
         </div>
 

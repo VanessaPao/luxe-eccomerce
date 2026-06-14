@@ -81,7 +81,7 @@ export default function Hombre() {
     const activePrice = p.sale && p.salePrice !== undefined && p.salePrice !== null ? p.salePrice : p.price;
     return (
       (category.length === 0 || category.includes(p.category)) &&
-      (size.length === 0 || size.includes(p.size)) &&
+      (size.length === 0 || size.includes(p.size) || (p.sizes && Object.keys(p.sizes).some(s => size.includes(s)))) &&
       (material.length === 0 || material.includes(p.material)) &&
       (color.length === 0 || color.includes(p.color)) &&
       activePrice >= priceMin && activePrice <= priceMax

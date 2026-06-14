@@ -111,7 +111,7 @@ export default function Mujer() {
       // Si no hay categorías seleccionadas, pasa el filtro. Si hay, el tipo/categoría debe estar incluido en la lista.
       (category.length === 0 || category.includes(p.category)) &&
       // Si no hay tallas seleccionadas, pasa. Si hay, la talla del producto debe coincidir.
-      (size.length === 0 || size.includes(p.size)) &&
+      (size.length === 0 || size.includes(p.size) || (p.sizes && Object.keys(p.sizes).some(s => size.includes(s)))) &&
       // Si no hay materiales seleccionados, pasa. Si hay, el material debe coincidir.
       (material.length === 0 || material.includes(p.material)) &&
       // Si no hay colores seleccionados, pasa. Si hay, el color debe coincidir.

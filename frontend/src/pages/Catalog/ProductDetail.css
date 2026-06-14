@@ -92,6 +92,7 @@
   align-items: flex-start;
 }
 
+/* ── Image Container ───────────────────────────────────────────────── */
 .detail-image {
   position: relative;
   border-radius: 16px;
@@ -99,19 +100,152 @@
   background: var(--bg-secondary);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
   border: 1px solid var(--border-light);
+  cursor: crosshair;
 }
 
-.detail-image img {
+.detail-image.lens-active {
+  cursor: none;
+}
+
+.detail-image-img {
   width: 100%;
   height: auto;
   display: block;
   object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   aspect-ratio: 3/4;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.detail-image:hover img {
-  transform: scale(1.04);
+.detail-image-img.mobile-zoomed {
+  transition: transform 0.15s ease-out;
+  transform-origin: center center;
+}
+
+/* ── Magnifier Lens (desktop) ──────────────────────────────────────── */
+.detail-lens {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  will-change: transform;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  animation: lensFadeIn 0.15s ease;
+  backdrop-filter: blur(0.5px);
+}
+
+@keyframes lensFadeIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+
+/* ── Zoom hint icon (bottom-right corner, shows on hover) ────────── */
+.detail-zoom-hint {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 12;
+  animation: zoomHintIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.detail-zoom-hint i {
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+@keyframes zoomHintIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Click-zoomed container ────────────────────────────── */
+.detail-image.click-zoomed {
+  cursor: crosshair;
+  box-shadow: 0 0 0 2px var(--accent-gold, #d4af37), 0 20px 50px rgba(0,0,0,0.15);
+}
+
+/* Zoomed background-image fill */
+.detail-image-zoomed {
+  width: 100%;
+  aspect-ratio: 3/4;
+  background-repeat: no-repeat;
+  display: block;
+  transition: background-position 0.05s linear;
+}
+
+/* Exit hint (bottom-right, visible while zoomed) */
+.detail-zoom-exit {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 30px;
+  padding: 0.35rem 0.75rem 0.35rem 0.5rem;
+  pointer-events: none;
+  z-index: 12;
+  animation: zoomHintIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.detail-zoom-exit i {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.detail-zoom-exit span {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Mobile zoom badge ─────────────────────────────────────────────── */
+.mobile-zoom-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  z-index: 5;
+  pointer-events: none;
+  letter-spacing: 0.05em;
+  animation: fadeIn 0.2s ease;
 }
 
 .sale-tag {
@@ -148,10 +282,43 @@
 .detail-name {
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.1;
-  margin: 0 0 1.5rem;
+  margin: 0 0 0.75rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text-primary);
+}
+
+/* ── Product Rating ─────────────────────────────────────────────────── */
+.detail-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.detail-rating-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.detail-rating-stars .star-filled {
+  color: #f59e0b;
+}
+
+.detail-rating-stars .star-empty {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+.detail-rating-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.detail-rating-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .detail-prices {
@@ -229,6 +396,100 @@
   font-size: 0.6rem;
 }
 
+/* ── Size Selector ────────────────────────────────────────────────────── */
+.detail-size-selector {
+  margin-bottom: 2rem;
+}
+
+.detail-size-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.detail-size-options {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.detail-size-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.9rem 0.5rem;
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--sans);
+}
+
+.detail-size-btn:hover:not(:disabled) {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.12);
+}
+
+.detail-size-btn.selected {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.1);
+  box-shadow: 0 0 0 1px var(--accent-gold), 0 6px 20px rgba(212, 175, 55, 0.15);
+}
+
+.detail-size-btn.out-of-stock {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.detail-size-btn .size-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.detail-size-btn .size-stock {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.detail-size-btn.selected .size-stock {
+  color: var(--accent-gold);
+}
+
+.detail-size-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  color: #f59e0b;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.detail-add-btn.added {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+}
+
 .detail-add-btn {
   width: 100%;
   display: flex;
@@ -270,17 +531,29 @@
   transform: none;
 }
 
+/* ── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .detail-container {
     grid-template-columns: 1fr;
     gap: 3rem;
   }
 
-  .detail-image img {
+  .detail-image-img {
     aspect-ratio: 4/5;
   }
 
   .detail-meta {
     grid-template-columns: 1fr;
+  }
+
+  /* No lens on mobile — use pinch-to-zoom instead */
+  .detail-lens,
+  .detail-lens-cursor {
+    display: none;
+  }
+
+  .detail-image {
+    cursor: default;
+    touch-action: none;
   }
 }

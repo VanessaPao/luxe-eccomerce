@@ -11,8 +11,6 @@ import {
   runTransaction,
   query,
   orderBy,
-  where,
-  limit,
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -258,21 +256,4 @@ export async function updateUserProfile(uid, data) {
   }, { merge: true });
 }
 
-// ─────────────────────────────────────────────
-// ORDERS
-// ─────────────────────────────────────────────
 
-/**
- * Obtiene el historial de órdenes de un usuario, ordenado por fecha descendente.
- */
-export async function getUserOrders(uid) {
-  const ref = collection(db, 'orders');
-  const q = query(
-    ref,
-    where('userId', '==', uid),
-    orderBy('createdAt', 'desc'),
-    limit(50)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}

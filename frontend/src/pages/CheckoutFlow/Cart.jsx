@@ -58,6 +58,7 @@ export default function Cart() {
               <img src={item.image} alt={item.name} className="cart-item-img" />
               <div className="cart-item-info">
                 <h3 className="cart-item-name">{item.name}</h3>
+                {item.size && <span className="cart-item-size">Talla: {item.size}</span>}
                 <p className="cart-item-price">${item.price}</p>
               </div>
               <div className="cart-item-qty">

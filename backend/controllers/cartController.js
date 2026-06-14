@@ -32,14 +32,14 @@ export async function getCart(req, res) {
  */
 export async function addItem(req, res) {
   const { userId } = req.params;
-  const { productId, name, price, image, quantity, sale, salePrice } = req.body;
+  const { productId, name, price, image, quantity, sale, salePrice, size } = req.body;
 
   if (!userId || !productId || !name) {
     return res.status(400).json({ error: "Faltan datos requeridos (userId, productId, name)." });
   }
 
   try {
-    await addCartItem(userId, { productId, name, price, image, sale, salePrice }, quantity || 1);
+    await addCartItem(userId, { productId, name, price, image, sale, salePrice, size }, quantity || 1);
     res.status(200).json({ message: "Item agregado al carrito." });
   } catch (error) {
     console.error("Error agregando al carrito:", error);

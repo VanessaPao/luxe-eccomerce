@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import useFavourites from '../hooks/useFavourites';
+import { Lock } from 'lucide-react';
 import './Favourites.css';
 
 export default function Favourites() {
@@ -14,7 +15,7 @@ export default function Favourites() {
     return (
       <div className="favs-page">
         <div className="favs-empty">
-          <div className="favs-lock-icon">🔐</div>
+          <div className="favs-lock-icon"><Lock size={36} /></div>
           <h1>Tus Favoritos</h1>
           <p>Inicia sesión para ver y guardar tus productos favoritos.</p>
           <div className="favs-auth-actions">
@@ -57,7 +58,7 @@ export default function Favourites() {
       <div className="favs-grid-placeholder">
         {/* Los productos se muestran desde las páginas de categoría con el corazón activo */}
         <p className="favs-hint">
-          Navega las categorías para ver tus productos favoritos marcados con ❤️
+          Navega por las categorías para marcar tus productos favoritos.
         </p>
         <a href="/" className="favs-shop-link">Ir a la tienda</a>
       </div>

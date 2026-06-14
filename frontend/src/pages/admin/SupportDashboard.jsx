@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../utils/api';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { Headphones, Ticket, User, Send, Sparkles, X } from 'lucide-react';
 import './SupportDashboard.css';
 
 const STATUS_LABELS = {
@@ -178,7 +179,7 @@ export default function SupportDashboard() {
           <div className="new-ticket-modal" onClick={e => e.stopPropagation()}>
             <div className="new-ticket-modal-header">
               <h2>Nuevo Ticket de Soporte</h2>
-              <button className="modal-close-btn" onClick={() => setShowNewTicket(false)}>✕</button>
+              <button className="modal-close-btn" onClick={() => setShowNewTicket(false)}><X size={18} /></button>
             </div>
             <div className="new-ticket-modal-body">
               <label>Asunto</label>
@@ -205,7 +206,7 @@ export default function SupportDashboard() {
                 onClick={handleCreateTicket}
                 disabled={creatingTicket || !newSubject.trim() || !newMessage.trim()}
               >
-                {creatingTicket ? 'Enviando...' : '✦ Crear Ticket'}
+                {creatingTicket ? 'Enviando...' : 'Crear Ticket'}
               </button>
             </div>
           </div>
@@ -215,7 +216,7 @@ export default function SupportDashboard() {
       {/* ── Header ── */}
       <div className="support-header">
         <div>
-          <h1>{isSupport ? '🎧 Panel de Soporte' : '🎫 Mis Tickets'}</h1>
+          <h1>{isSupport ? 'Panel de Soporte' : 'Mis Tickets'}</h1>
           <p>
             {isSupport
               ? 'Gestiona y responde los tickets de tus clientes'
@@ -287,7 +288,7 @@ export default function SupportDashboard() {
                   </div>
                   <div className="ticket-card-user">
                     {isSupport
-                      ? `👤 ${ticket.userName || ticket.userEmail || ticket.userId}`
+                      ? ticket.userName || ticket.userEmail || ticket.userId
                       : formatDate(ticket.createdAt)}
                   </div>
                   <div className="ticket-card-preview">
@@ -339,7 +340,7 @@ export default function SupportDashboard() {
                 {(selected.messages || []).map((msg, i) => (
                   <div
                     key={i}
-                    className={`message-bubble ${msg.sender === 'user' ? 'user' : 'support'}`}
+                    className={`message-bubble ${msg.senderId === user?.uid || (!msg.senderId && msg.sender === 'user') ? 'support' : 'user'}`}
                   >
                     <div className="msg-sender">{msg.senderName || msg.sender}</div>
                     {msg.text}

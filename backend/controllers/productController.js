@@ -53,6 +53,7 @@ export async function addProduct(req, res) {
     category,
     type,
     size,
+    sizes,
     material,
     color,
     stock,
@@ -83,7 +84,10 @@ export async function addProduct(req, res) {
   if (!type || typeof type !== "string" || type.trim() === "") {
     return res.status(400).json({ error: "El tipo de producto es obligatorio y debe ser un texto." });
   }
-  if (!size || typeof size !== "string" || size.trim() === "") {
+  // Para mujer/hombre: sizes es un objeto { Grande: N, Mediano: N, Chico: N }
+  // Para accesorios: size es un string simple
+  const hasSizes = sizes && typeof sizes === "object" && !Array.isArray(sizes);
+  if (!hasSizes && (!size || typeof size !== "string" || size.trim() === "")) {
     return res.status(400).json({ error: "La talla es obligatoria y debe ser un texto." });
   }
   if (!material || typeof material !== "string" || material.trim() === "") {
@@ -91,14 +95,27 @@ export async function addProduct(req, res) {
   }
   if (!color || typeof color !== "string" || color.trim() === "") {
     return res.status(400).json({ error: "El color es obligatorio y debe ser un texto." });
-  }
-  if (
-    stock === undefined ||
-    typeof stock !== "number" ||
-    stock < 0 ||
-    !Number.isInteger(stock)
-  ) {
-    return res.status(400).json({ error: "El stock es obligatorio y debe ser un número entero mayor o igual a cero." });
+  }  // Si hay sizes, calcular stock total; si no, validar stock directo
+  let totalStock = 0;
+  if (hasSizes) {
+    const validSizes = ['Chico', 'Mediano', 'Grande'];
+    for (const [sz, qty] of Object.entries(sizes)) {
+      if (!validSizes.includes(sz)) {
+        return res.status(400).json({ error: `Talla inválida: "${sz}". Las válidas son: ${validSizes.join(', ')}.` });
+      }
+      if (typeof qty !== 'number' || qty < 0 || !Number.isInteger(qty)) {
+        return res.status(400).json({ error: `El stock de la talla "${sz}" debe ser un entero >= 0.` });
+      }
+      totalStock += qty;
+    }
+  } else {
+    if (
+      stock === undefined || typeof stock !== "number" ||
+      stock < 0 || !Number.isInteger(stock)
+    ) {
+      return res.status(400).json({ error: "El stock es obligatorio y debe ser un número entero mayor o igual a cero." });
+    }
+    totalStock = Number(stock);
   }
   if (!image || typeof image !== "string" || image.trim() === "") {
     return res.status(400).json({ error: "La imagen es obligatoria y debe ser una URL de imagen válida." });
@@ -117,17 +134,25 @@ export async function addProduct(req, res) {
       name: name.trim(),
       price: Number(price),
       department: activeDepartment.toLowerCase(),
-      category: activeDepartment.toLowerCase(), // Compatibilidad con la base de datos
+      category: activeDepartment.toLowerCase(),
       type: type.trim(),
-      size: size.trim(),
       material: material.trim(),
       color: color.trim(),
-      stock: Number(stock),
+      stock: totalStock,
       image: image.trim(),
       description: description ? description.trim() : "",
       sale: !!sale,
       salePrice: sale ? Number(salePrice) : null,
     };
+    // Para mujer/hombre: guardar sizes; para accesorios: guardar size simple
+    if (hasSizes) {
+      newProduct.sizes = {};
+      for (const [sz, qty] of Object.entries(sizes)) {
+        newProduct.sizes[sz] = qty;
+      }
+    } else {
+      newProduct.size = size.trim();
+    }
 
     const productId = await createProduct(newProduct);
 
@@ -197,6 +222,25 @@ export async function editProduct(req, res) {
       updates.size = body.size.trim();
     }
 
+    if (body.sizes !== undefined) {
+      if (typeof body.sizes !== "object" || Array.isArray(body.sizes)) {
+        return res.status(400).json({ error: "sizes debe ser un objeto con stock por talla." });
+      }
+      const validSizes = ['Chico', 'Mediano', 'Grande'];
+      let totalStock = 0;
+      for (const [sz, qty] of Object.entries(body.sizes)) {
+        if (!validSizes.includes(sz)) {
+          return res.status(400).json({ error: `Talla inválida: "${sz}".` });
+        }
+        if (typeof qty !== 'number' || qty < 0 || !Number.isInteger(qty)) {
+          return res.status(400).json({ error: `Stock de "${sz}" debe ser entero >= 0.` });
+        }
+        totalStock += qty;
+      }
+      updates.sizes = body.sizes;
+      updates.stock = totalStock;
+    }
+
     if (body.material !== undefined) {
       if (typeof body.material !== "string" || body.material.trim() === "") {
         return res.status(400).json({ error: "El material no puede ser vacío." });
@@ -211,7 +255,7 @@ export async function editProduct(req, res) {
       updates.color = body.color.trim();
     }
 
-    if (body.stock !== undefined) {
+    if (body.stock !== undefined && body.sizes === undefined) {
       if (typeof body.stock !== "number" || body.stock < 0 || !Number.isInteger(body.stock)) {
         return res.status(400).json({ error: "El stock debe ser un número entero mayor o igual a cero." });
       }

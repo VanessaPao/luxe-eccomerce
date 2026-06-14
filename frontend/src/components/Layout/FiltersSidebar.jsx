@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import '../../pages/Catalog/Mujer.css';
 
 const COLOR_MAP = {
@@ -19,14 +20,43 @@ export default function FiltersSidebar({
   materials,
   colors,
 }) {
-  return (
-    <aside className="filters-sidebar">
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-      {/* Categoría — con opción "Todos" */}
+  // Bloquear scroll del body cuando el drawer está abierto
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [drawerOpen]);
+
+  // Cerrar con Escape
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setDrawerOpen(false);
+    };
+    if (drawerOpen) window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [drawerOpen]);
+
+  // Función de selección única (radio): si ya está seleccionado, lo deselecciona;
+  // si no, limpia y selecciona solo el nuevo valor.
+  const selectFilter = (key, value) => {
+    if (filters[key].includes(value)) {
+      clearFilter(key);
+    } else {
+      clearFilter(key);
+      toggleArrayFilter(key, value);
+    }
+  };
+
+  const filterContent = (
+    <>
+      {/* Categoría */}
       <section className="filter-group">
         <h3>Categoría</h3>
-
-        {/* "Todos" limpia la selección */}
         <label
           className={`filter-option${filters.category.length === 0 ? ' selected' : ''}`}
           onClick={() => clearFilter('category')}
@@ -34,18 +64,14 @@ export default function FiltersSidebar({
         >
           Todos
         </label>
-
         {categories.map((cat) => (
           <label
             key={cat}
             className={`filter-option${filters.category.includes(cat) ? ' selected' : ''}`}
+            onClick={(e) => { e.preventDefault(); selectFilter('category', cat); }}
+            style={{ cursor: 'pointer' }}
           >
-            <input
-              type="checkbox"
-              checked={filters.category.includes(cat)}
-              onChange={() => toggleArrayFilter('category', cat)}
-              style={{ display: 'none' }}
-            />
+            <span className={`filter-radio${filters.category.includes(cat) ? ' checked' : ''}`} />
             {cat}
           </label>
         ))}
@@ -65,13 +91,10 @@ export default function FiltersSidebar({
           <label
             key={sz}
             className={`filter-option${filters.size.includes(sz) ? ' selected' : ''}`}
+            onClick={(e) => { e.preventDefault(); selectFilter('size', sz); }}
+            style={{ cursor: 'pointer' }}
           >
-            <input
-              type="checkbox"
-              checked={filters.size.includes(sz)}
-              onChange={() => toggleArrayFilter('size', sz)}
-              style={{ display: 'none' }}
-            />
+            <span className={`filter-radio${filters.size.includes(sz) ? ' checked' : ''}`} />
             {sz}
           </label>
         ))}
@@ -80,7 +103,14 @@ export default function FiltersSidebar({
       {/* Precio */}
       <section className="filter-group">
         <h3>Precio</h3>
-        <div className="price-range">
+        <div className="price-dual-range">
+          <div
+            className="price-track"
+            style={{
+              '--price-min': `${(filters.priceMin / 1000) * 100}%`,
+              '--price-max': `${(filters.priceMax / 1000) * 100}%`,
+            }}
+          />
           <input
             type="range"
             name="priceMin"
@@ -88,6 +118,7 @@ export default function FiltersSidebar({
             max="1000"
             value={filters.priceMin}
             onChange={handlePriceChange}
+            className="price-thumb price-thumb-min"
           />
           <input
             type="range"
@@ -96,10 +127,11 @@ export default function FiltersSidebar({
             max="1000"
             value={filters.priceMax}
             onChange={handlePriceChange}
+            className="price-thumb price-thumb-max"
           />
-          <div className="price-values">
-            ${filters.priceMin} – ${filters.priceMax}
-          </div>
+        </div>
+        <div className="price-values">
+          ${filters.priceMin} – ${filters.priceMax}
         </div>
       </section>
 
@@ -117,35 +149,26 @@ export default function FiltersSidebar({
           <label
             key={mat}
             className={`filter-option${filters.material.includes(mat) ? ' selected' : ''}`}
+            onClick={(e) => { e.preventDefault(); selectFilter('material', mat); }}
+            style={{ cursor: 'pointer' }}
           >
-            <input
-              type="checkbox"
-              checked={filters.material.includes(mat)}
-              onChange={() => toggleArrayFilter('material', mat)}
-              style={{ display: 'none' }}
-            />
+            <span className={`filter-radio${filters.material.includes(mat) ? ' checked' : ''}`} />
             {mat}
           </label>
         ))}
       </section>
 
-      {/* Color – horizontal */}
+      {/* Color */}
       <section className="filter-group color-group">
         <h3>Color</h3>
         {colors.map((col) => (
           <label key={col} className="filter-option color-option" style={{ cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={filters.color.includes(col)}
-              onChange={() => toggleArrayFilter('color', col)}
-              style={{ display: 'none' }}
-              aria-label={col}
-            />
             <span
               className="color-circle"
+              onClick={(e) => { e.preventDefault(); selectFilter('color', col); }}
               style={{
                 backgroundColor: COLOR_MAP[col] || col.toLowerCase(),
-                outline: filters.color.includes(col) ? '2px solid #ffd700' : 'none',
+                outline: filters.color.includes(col) ? '2px solid var(--accent-gold)' : 'none',
                 outlineOffset: '2px',
               }}
               title={col}
@@ -153,7 +176,57 @@ export default function FiltersSidebar({
           </label>
         ))}
       </section>
+    </>
+  );
 
-    </aside>
+  return (
+    <>
+      {/* ── Botón "Filtros" — solo visible en móvil ── */}
+      <button
+        className="filters-mobile-toggle"
+        onClick={() => setDrawerOpen(true)}
+        aria-label="Abrir filtros"
+      >
+        <SlidersHorizontal size={16} />
+        Filtros
+      </button>
+
+      {/* ── Sidebar desktop — visible solo en desktop ── */}
+      <aside className="filters-sidebar">
+        {filterContent}
+      </aside>
+
+      {/* ── Drawer móvil — overlay + panel deslizante ── */}
+      {drawerOpen && (
+        <div className="filters-drawer-overlay" onClick={() => setDrawerOpen(false)}>
+          <div
+            className="filters-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="filters-drawer-header">
+              <h2>Filtros</h2>
+              <button
+                className="filters-drawer-close"
+                onClick={() => setDrawerOpen(false)}
+                aria-label="Cerrar filtros"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="filters-drawer-body">
+              {filterContent}
+            </div>
+            <div className="filters-drawer-footer">
+              <button
+                className="filters-drawer-apply"
+                onClick={() => setDrawerOpen(false)}
+              >
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

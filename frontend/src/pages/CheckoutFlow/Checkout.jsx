@@ -6,6 +6,7 @@ import { saveUserAddress } from '../../firebase/firestore';
 import { functions } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import { API_BASE_URL } from '../../utils/api';
+import { MapPin, CreditCard } from 'lucide-react';
 import './Checkout.css';
 
 export default function Checkout() {
@@ -202,7 +203,7 @@ export default function Checkout() {
           {/* Sección Dirección */}
           <section className="checkout-section">
             <h2>
-              <span>📍</span> 1. Dirección de Envío
+              <span><MapPin size={18} /></span> 1. Dirección de Envío
             </h2>
             
             {showForm ? (
@@ -334,7 +335,7 @@ export default function Checkout() {
           {/* Sección Métodos de Pago */}
           <section className="checkout-section">
             <h2>
-              <span>💳</span> 2. Método de Pago
+              <span><CreditCard size={18} /></span> 2. Método de Pago
             </h2>
             
             <div className="payment-selector">

@@ -5,6 +5,7 @@
 
 import express from "express";
 import { create } from "../controllers/orderController.js";
+import { db } from "../firebase/admin.js";
 
 const router = express.Router();
 
@@ -99,5 +100,32 @@ const router = express.Router();
  *               $ref: "#/components/schemas/ErrorResponse"
  */
 router.post("/", create);
+
+/**
+ * GET /api/orders/user/:userId
+ * Obtiene todas las órdenes de un usuario específico.
+ */
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const snapshot = await db
+      .collection("orders")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const orders = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() ?? doc.data().createdAt ?? null,
+    }));
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error obteniendo órdenes del usuario:", error);
+    res.status(500).json({ error: "Error al obtener las órdenes del usuario." });
+  }
+});
 
 export default router;

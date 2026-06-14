@@ -23,11 +23,14 @@ export async function getCartItems(uid) {
  * Si ya existe, suma la cantidad.
  */
 export async function addCartItem(uid, product, quantity = 1) {
+  const size = product.size || null;
+  // Key includes size so same product with different sizes are separate items
+  const docId = size ? `${String(product.productId || product.id)}_${size}` : String(product.productId || product.id);
   const ref = db
     .collection("users")
     .doc(uid)
     .collection("cart")
-    .doc(String(product.productId || product.id));
+    .doc(docId);
 
   const snap = await ref.get();
 
@@ -42,11 +45,12 @@ export async function addCartItem(uid, product, quantity = 1) {
         ? product.salePrice
         : product.price;
     await ref.set({
-      productId: String(product.productId || product.id),
+      productId: docId,
       name: product.name,
       price: activePrice,
       image: product.image,
       quantity,
+      size,
       addedAt: new Date(),
     });
   }

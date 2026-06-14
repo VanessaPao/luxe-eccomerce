@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { uploadImageToCloudinary } from '../../utils/cloudinary';
 import { API_BASE_URL } from '../../utils/api';
+import CustomSelect from '../../components/CustomSelect';
 
 const TYPE_OPTIONS = {
   mujer: [
@@ -32,21 +33,17 @@ const TYPE_OPTIONS = {
   ]
 };
 
-const SIZE_OPTIONS = {
-  mujer: ['Chico', 'Mediano', 'Grande'],
-  hombre: ['Chico', 'Mediano', 'Grande'],
-  accesorios: ['Única']
-};
+const SIZES = ['Grande', 'Mediano', 'Chico'];
 
 const ProductForm = ({ editingProduct, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
-    department: 'mujer', // Replaces category visually
+    department: 'mujer',
     type: 'Vestidos',
-    size: 'Mediano',
     material: 'Algodón',
     color: '',
+    sizes: { Grande: 0, Mediano: 0, Chico: 0 },
     stock: '',
     image: '',
     description: '',
@@ -57,16 +54,28 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const hasSizes = formData.department === 'mujer' || formData.department === 'hombre';
+
   useEffect(() => {
     if (editingProduct) {
+      const dep = editingProduct.department || editingProduct.category || 'mujer';
+      // Si el producto tiene sizes (mujer/hombre), usarlo; si no, crear desde stock simple
+      let sizes = { Grande: 0, Mediano: 0, Chico: 0 };
+      if (editingProduct.sizes && typeof editingProduct.sizes === 'object') {
+        sizes = { Grande: 0, Mediano: 0, Chico: 0, ...editingProduct.sizes };
+      } else if (editingProduct.size && editingProduct.stock) {
+        // Producto viejo: asignar stock a su talla
+        sizes[editingProduct.size] = editingProduct.stock;
+      }
+
       setFormData({
         name: editingProduct.name || '',
         price: editingProduct.price || '',
-        department: editingProduct.department || editingProduct.category || 'mujer',
+        department: dep,
         type: editingProduct.type || 'Vestidos',
-        size: editingProduct.size || 'Mediano',
         material: editingProduct.material || 'Algodón',
         color: editingProduct.color || '',
+        sizes,
         stock: editingProduct.stock || '',
         image: editingProduct.image || '',
         description: editingProduct.description || '',
@@ -91,14 +100,24 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
         if (typeOpts.length > 0) {
           updated.type = typeOpts[0];
         }
-        const sizeOpts = SIZE_OPTIONS[value] || [];
-        if (sizeOpts.length > 0) {
-          updated.size = sizeOpts[0];
+        // Al cambiar departamento, resetear sizes/stock
+        if (value === 'mujer' || value === 'hombre') {
+          updated.sizes = { Grande: 0, Mediano: 0, Chico: 0 };
+        } else {
+          updated.stock = '';
         }
       }
 
       return updated;
     });
+  };
+
+  const handleSizeStockChange = (sizeName, value) => {
+    const numVal = value === '' ? 0 : Math.max(0, parseInt(value) || 0);
+    setFormData((prev) => ({
+      ...prev,
+      sizes: { ...prev.sizes, [sizeName]: numVal },
+    }));
   };
 
   const handleFileChange = (e) => {
@@ -119,12 +138,25 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
       }
 
       const productData = {
-        ...formData,
+        name: formData.name,
+        price: Number(formData.price),
+        department: formData.department,
+        type: formData.type,
+        material: formData.material,
+        color: formData.color,
+        image: imageUrl,
+        description: formData.description,
         sale: !!formData.sale,
         salePrice: formData.sale ? Number(formData.salePrice) : null,
-        category: formData.department, // Mantenemos compatibilidad
-        image: imageUrl,
+        category: formData.department,
       };
+
+      if (hasSizes) {
+        productData.sizes = { ...formData.sizes };
+      } else {
+        productData.size = 'Única';
+        productData.stock = Number(formData.stock) || 0;
+      }
 
       if (editingProduct) {
         const res = await fetch(`${API_BASE_URL}/api/products/${editingProduct.id}`, {
@@ -132,20 +164,26 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productData),
         });
-        if (!res.ok) throw new Error('Error al actualizar producto');
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Error al actualizar producto');
+        }
       } else {
         const res = await fetch(`${API_BASE_URL}/api/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productData),
         });
-        if (!res.ok) throw new Error('Error al crear producto');
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Error al crear producto');
+        }
       }
 
       onSave();
     } catch (err) {
       console.error(err);
-      setError('Hubo un error al guardar el producto.');
+      setError(err.message || 'Hubo un error al guardar el producto.');
     } finally {
       setLoading(false);
     }
@@ -157,11 +195,9 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
     optionsToRender.unshift(formData.type);
   }
 
-  const currentSizes = SIZE_OPTIONS[formData.department] || ['Chico', 'Mediano', 'Grande'];
-  const sizesToRender = [...currentSizes];
-  if (formData.size && !currentSizes.includes(formData.size)) {
-    sizesToRender.unshift(formData.size);
-  }
+  const totalStock = hasSizes
+    ? Object.values(formData.sizes).reduce((sum, v) => sum + (v || 0), 0)
+    : Number(formData.stock) || 0;
 
   return (
     <div className="product-form-container">
@@ -194,17 +230,43 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
             />
           </div>
           <div className="form-group">
-            <label>Stock</label>
-            <input
-              type="number"
-              name="stock"
-              value={formData.stock}
-              onChange={handleChange}
-              required
-              min="0"
-            />
+            <label>Stock total: {totalStock}</label>
+            {hasSizes && (
+              <span style={{ fontSize: '0.75rem', color: '#888' }}>Calculado automáticamente</span>
+            )}
+            {!hasSizes && (
+              <input
+                type="number"
+                name="stock"
+                value={formData.stock}
+                onChange={handleChange}
+                required
+                min="0"
+              />
+            )}
           </div>
         </div>
+
+        {/* ── Stock por talla (solo mujer/hombre) ── */}
+        {hasSizes && (
+          <div className="form-group">
+            <label>Stock por Talla</label>
+            <div className="form-group-row" style={{ gap: '0.75rem' }}>
+              {SIZES.map((sz) => (
+                <div key={sz} className="form-group" style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.8rem' }}>{sz}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.sizes[sz] || ''}
+                    onChange={(e) => handleSizeStockChange(sz, e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="form-group-row">
           <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', alignSelf: 'center' }}>
@@ -237,45 +299,38 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
         <div className="form-group-row">
           <div className="form-group">
             <label>Departamento</label>
-            <select name="department" value={formData.department} onChange={handleChange} required>
-              <option value="mujer">Mujer</option>
-              <option value="hombre">Hombre</option>
-              <option value="accesorios">Accesorios</option>
-            </select>
+            <CustomSelect
+              name="department"
+              value={formData.department === 'mujer' ? 'Mujer' : formData.department === 'hombre' ? 'Hombre' : 'Accesorios'}
+              onChange={(e) => {
+                const map = { Mujer: 'mujer', Hombre: 'hombre', Accesorios: 'accesorios' };
+                handleChange({ target: { name: 'department', value: map[e.target.value] || e.target.value, type: 'text' } });
+              }}
+              options={['Mujer', 'Hombre', 'Accesorios']}
+              required
+            />
           </div>
           <div className="form-group">
             <label>Tipo</label>
-            <select name="type" value={formData.type} onChange={handleChange} required>
-              {optionsToRender.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <CustomSelect
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              options={optionsToRender}
+              required
+            />
           </div>
         </div>
 
-        <div className="form-group-row">
-          <div className="form-group">
-            <label>Talla</label>
-            <select name="size" value={formData.size} onChange={handleChange} required>
-              {sizesToRender.map((sizeOption) => (
-                <option key={sizeOption} value={sizeOption}>
-                  {sizeOption}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Material</label>
-            <select name="material" value={formData.material} onChange={handleChange} required>
-              <option value="Seda">Seda</option>
-              <option value="Algodón">Algodón</option>
-              <option value="Lino">Lino</option>
-              <option value="Lana">Lana</option>
-              <option value="Cuero">Cuero</option>
-            </select>
-          </div>
+        <div className="form-group">
+          <label>Material</label>
+          <CustomSelect
+            name="material"
+            value={formData.material}
+            onChange={handleChange}
+            options={['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero', 'Metal', 'Perla', 'Paja']}
+            required
+          />
         </div>
 
         <div className="form-group">

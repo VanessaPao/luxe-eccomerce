@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../utils/api';
+import { Trash2, Pencil } from 'lucide-react';
 
 const ProductList = ({ onEditProduct, refreshKey }) => {
   const [products, setProducts] = useState([]);
@@ -103,14 +104,14 @@ const ProductList = ({ onEditProduct, refreshKey }) => {
                         className="btn-edit"
                         title="Editar"
                       >
-                        ✏️
+                        <Pencil size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(product.id)} 
                         className="btn-delete"
                         title="Eliminar"
                       >
-                        🗑️
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

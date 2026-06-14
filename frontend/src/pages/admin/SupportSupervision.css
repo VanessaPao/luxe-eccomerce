@@ -620,3 +620,65 @@
   font-size: 0.9rem;
   padding: 2rem 0;
 }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .metrics-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .metric-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .metric-data h3 {
+    font-size: 1.4rem;
+  }
+
+  .card-glass {
+    padding: 1.25rem;
+  }
+
+  .search-filter-bar {
+    flex-direction: column;
+  }
+
+  .info-grid,
+  .dates-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-drawer {
+    max-width: 100%;
+  }
+
+  .node-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+
+  .ranking-item {
+    padding: 0.75rem;
+  }
+
+  .drawer-header {
+    padding: 1rem;
+  }
+
+  .drawer-body {
+    padding: 1.25rem;
+  }
+}

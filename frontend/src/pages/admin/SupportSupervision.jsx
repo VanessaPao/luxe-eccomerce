@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../utils/api';
+import { Ticket, User, MessageSquare, Settings, Lock, FolderOpen, Clock, CheckCircle2, Zap, AlertTriangle, X } from 'lucide-react';
 import './SupportSupervision.css';
 
 // Formateadores de fecha y duración
@@ -42,13 +43,13 @@ const STATUS_LABELS = {
   closed: 'Cerrado',
 };
 
-const EVENT_ICONS = {
-  ticket_created: '🎫',
-  assigned: '👤',
-  reply_sent: '💬',
-  status_changed: '⚙️',
-  resolved: '✅',
-  closed: '🔒',
+const EVENT_ICON_COMPONENTS = {
+  ticket_created: Ticket,
+  assigned: User,
+  reply_sent: MessageSquare,
+  status_changed: Settings,
+  resolved: CheckCircle2,
+  closed: Lock,
 };
 
 const EVENT_LABELS = {
@@ -108,7 +109,7 @@ export default function SupportSupervision() {
   if (error && !metrics) {
     return (
       <div style={{ textAlign: 'center', padding: '3rem', color: '#ff4d4d' }}>
-        <p>⚠️ {error}</p>
+        <p><AlertTriangle size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />{error}</p>
         <button onClick={fetchMetrics} className="filter-select" style={{ marginTop: '1rem' }}>
           Reintentar
         </button>
@@ -135,35 +136,35 @@ export default function SupportSupervision() {
       {/* Resumen General */}
       <section className="metrics-summary-grid">
         <div className="metric-card open">
-          <div className="metric-icon">📂</div>
+          <div className="metric-icon"><FolderOpen size={22} /></div>
           <div className="metric-data">
             <h3>{summary.open ?? 0}</h3>
             <p>Abiertos</p>
           </div>
         </div>
         <div className="metric-card progress">
-          <div className="metric-icon">⏳</div>
+          <div className="metric-icon"><Clock size={22} /></div>
           <div className="metric-data">
             <h3>{summary.in_progress ?? 0}</h3>
             <p>En Progreso</p>
           </div>
         </div>
         <div className="metric-card resolved">
-          <div className="metric-icon">✅</div>
+          <div className="metric-icon"><CheckCircle2 size={22} /></div>
           <div className="metric-data">
             <h3>{summary.resolved ?? 0}</h3>
             <p>Resueltos</p>
           </div>
         </div>
         <div className="metric-card closed">
-          <div className="metric-icon">🔒</div>
+          <div className="metric-icon"><Lock size={22} /></div>
           <div className="metric-data">
             <h3>{summary.closed ?? 0}</h3>
             <p>Cerrados</p>
           </div>
         </div>
         <div className="metric-card time">
-          <div className="metric-icon">⚡</div>
+          <div className="metric-icon"><Zap size={22} /></div>
           <div className="metric-data">
             <h3>{formatDuration(summary.globalResolutionTime)}</h3>
             <p>T. Promedio Resolución</p>
@@ -177,9 +178,9 @@ export default function SupportSupervision() {
           {/* Métricas por Agente */}
           <section className="supervision-section card-glass">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0 }}>📈 Desempeño del Equipo de Soporte (Procesado en Backend)</h2>
+              <h2 style={{ margin: 0 }}>Desempeño del Equipo de Soporte</h2>
               <button onClick={fetchMetrics} className="filter-select" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
-                🔄 Actualizar
+                Actualizar
               </button>
             </div>
             {agentMetrics.length === 0 ? (
@@ -226,13 +227,13 @@ export default function SupportSupervision() {
 
           {/* Ranking de Agentes */}
           <section className="supervision-section card-glass ranking-section">
-            <h2>🏆 Ranking de Rendimiento (Tickets Finalizados)</h2>
+            <h2>Ranking de Rendimiento</h2>
             <div className="ranking-list">
               {agentRanking.map((agent, index) => {
                 let badge = '';
-                if (index === 0) badge = '🥇';
-                else if (index === 1) badge = '🥈';
-                else if (index === 2) badge = '🥉';
+                if (index === 0) badge = '#1';
+                else if (index === 1) badge = '#2';
+                else if (index === 2) badge = '#3';
                 else badge = `#${index + 1}`;
 
                 return (
@@ -255,7 +256,7 @@ export default function SupportSupervision() {
 
         {/* Sección Derecha: Auditoría de Tickets */}
         <div className="supervision-panel-right card-glass">
-          <h2>🔍 Auditoría e Historial de Tickets</h2>
+          <h2>Auditoría e Historial de Tickets</h2>
           
           <div className="search-filter-bar">
             <input
@@ -295,12 +296,12 @@ export default function SupportSupervision() {
                     </span>
                   </div>
                   <div className="audit-ticket-meta">
-                    <span>👤 {ticket.userName || ticket.userEmail || 'Cliente'}</span>
-                    <span>📅 {formatDateTime(ticket.createdAt)}</span>
+                    <span>{ticket.userName || ticket.userEmail || 'Cliente'}</span>
+                    <span>{formatDateTime(ticket.createdAt)}</span>
                   </div>
                   {ticket.assignedToName && (
                     <div className="audit-ticket-assigned">
-                      🎧 Asignado a: <strong>{ticket.assignedToName}</strong>
+                      Asignado a: <strong>{ticket.assignedToName}</strong>
                     </div>
                   )}
                 </div>
@@ -316,7 +317,7 @@ export default function SupportSupervision() {
           <div className="audit-drawer" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-header">
               <h2>Detalle de Auditoría</h2>
-              <button className="close-btn" onClick={() => setSelectedTicket(null)}>✕</button>
+              <button className="close-btn" onClick={() => setSelectedTicket(null)}><X size={16} /></button>
             </div>
             
             <div className="drawer-body">
@@ -380,7 +381,7 @@ export default function SupportSupervision() {
                   <div className="audit-timeline">
                     {selectedTicket.activityLog.map((log, idx) => (
                       <div key={idx} className="timeline-node">
-                        <div className="node-icon">{EVENT_ICONS[log.type] || '⚙️'}</div>
+                        <div className="node-icon">{(() => { const Ic = EVENT_ICON_COMPONENTS[log.type] || Settings; return <Ic size={16} />; })()}</div>
                         <div className="node-content">
                           <div className="node-header">
                             <strong>{EVENT_LABELS[log.type] || log.type}</strong>

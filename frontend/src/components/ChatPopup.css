@@ -36,7 +36,7 @@
   right: 2rem;
   width: 380px;
   height: 520px;
-  background: rgba(26, 27, 31, 0.95);
+  background: var(--bg-primary);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-gold);
   border-radius: 16px;
@@ -60,7 +60,7 @@
 /* Header */
 .chat-header {
   padding: 1.2rem;
-  background: linear-gradient(90deg, #1a1b1f, #111);
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-gold);
   display: flex;
   align-items: center;
@@ -129,7 +129,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: rgba(11, 12, 14, 0.3);
+  background: var(--bg-secondary);
 }
 
 /* Custom Scrollbar for Messages */
@@ -200,7 +200,7 @@
 .chat-input-area {
   padding: 1rem;
   border-top: 1px solid var(--border-color);
-  background: rgba(26, 27, 31, 0.98);
+  background: var(--bg-primary);
   display: flex;
   gap: 0.75rem;
 }
@@ -280,8 +280,8 @@
   grid-template-columns: 52px 1fr auto;
   align-items: center;
   gap: 0.6rem;
-  background: rgba(26, 27, 31, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-gold);
   border-radius: 12px;
   padding: 0.6rem;
   transition: border-color 0.2s ease;
@@ -296,7 +296,7 @@
   height: 52px;
   object-fit: cover;
   border-radius: 8px;
-  background: #1a1b1f;
+  background: var(--bg-secondary);
 }
 
 .chat-product-info {
@@ -306,7 +306,7 @@
 .chat-product-name {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #e8e8e8;
+  color: var(--text-primary);
   margin: 0 0 0.15rem;
   white-space: nowrap;
   overflow: hidden;
@@ -315,7 +315,7 @@
 
 .chat-product-reason {
   font-size: 0.7rem;
-  color: #888;
+  color: var(--text-secondary);
   margin: 0 0 0.2rem;
   white-space: nowrap;
   overflow: hidden;
@@ -333,7 +333,7 @@
 
 .chat-product-original {
   font-size: 0.7rem;
-  color: #666;
+  color: var(--text-muted);
   text-decoration: line-through;
   font-weight: 400;
 }
@@ -383,7 +383,7 @@
 .chat-tabs {
   display: flex;
   border-bottom: 1px solid var(--border-gold);
-  background: rgba(17, 17, 17, 0.95);
+  background: var(--bg-secondary);
   flex-shrink: 0;
 }
 
@@ -486,7 +486,7 @@
   font-weight: 600;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
-  background: rgba(17,17,17,0.6);
+  background: var(--bg-secondary);
   flex-shrink: 0;
 }
 
@@ -519,7 +519,7 @@
 
 .support-ticket-row {
   padding: 0.9rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--border-light);
   cursor: pointer;
   transition: background 0.18s ease;
 }
@@ -580,7 +580,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
-  background: rgba(17,17,17,0.6);
+  background: var(--bg-secondary);
   flex-shrink: 0;
 }
 
@@ -646,7 +646,7 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
-  background: rgba(17,17,17,0.6);
+  background: var(--bg-secondary);
   flex-shrink: 0;
 }
 
@@ -683,7 +683,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: rgba(11,12,14,0.3);
+  background: var(--bg-secondary);
 }
 
 .support-live-messages::-webkit-scrollbar { width: 4px; }
@@ -743,7 +743,7 @@
 .support-live-input {
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--border-color);
-  background: rgba(26,27,31,0.98);
+  background: var(--bg-primary);
   display: flex;
   gap: 0.6rem;
   align-items: flex-end;
@@ -771,7 +771,7 @@
   font-size: 0.78rem;
   color: var(--text-secondary);
   border-top: 1px solid var(--border-color);
-  background: rgba(26,27,31,0.98);
+  background: var(--bg-primary);
 }
 
 .support-new-link {

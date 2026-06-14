@@ -37,6 +37,7 @@ export function CartProvider({ children }) {
                 price: item.price,
                 image: item.image,
                 quantity: item.quantity,
+                size: item.size || null,
               }),
             })
           )
@@ -56,6 +57,7 @@ export function CartProvider({ children }) {
 
   /* ── Agregar al carrito ── */
   const addItem = useCallback(async (product, quantity = 1) => {
+    const size = product.selectedSize || product.size || null;
     if (user) {
       const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}`, {
         method: 'POST',
@@ -68,19 +70,24 @@ export function CartProvider({ children }) {
           quantity,
           sale: product.sale,
           salePrice: product.salePrice,
+          size,
         }),
       });
       if (!res.ok) throw new Error('Error al agregar al carrito');
     } else {
       setItems((prev) => {
-        const existing = prev.find((i) => i.productId === String(product.id));
+        // Key includes size so same product in different sizes are separate items
+        const itemKey = size ? `${String(product.id)}_${size}` : String(product.id);
+        const existing = prev.find((i) => {
+          const key = i.size ? `${i.productId}_${i.size}` : i.productId;
+          return key === itemKey;
+        });
         let next;
         if (existing) {
-          next = prev.map((i) =>
-            i.productId === String(product.id)
-              ? { ...i, quantity: i.quantity + quantity }
-              : i
-          );
+          next = prev.map((i) => {
+            const key = i.size ? `${i.productId}_${i.size}` : i.productId;
+            return key === itemKey ? { ...i, quantity: i.quantity + quantity } : i;
+          });
         } else {
           const activePrice = product.sale && product.salePrice !== undefined && product.salePrice !== null
             ? product.salePrice
@@ -88,11 +95,12 @@ export function CartProvider({ children }) {
           next = [
             ...prev,
             {
-              productId: String(product.id),
+              productId: itemKey,
               name: product.name,
               price: activePrice,
               image: product.image,
               quantity,
+              size,
             },
           ];
         }
