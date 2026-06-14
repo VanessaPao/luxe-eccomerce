@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -11,6 +11,15 @@ function Navbar() {
     const { totalItems } = useCart();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        const q = searchQuery.trim();
+        if (q) {
+            navigate(`/buscar?q=${encodeURIComponent(q)}`);
+        }
+    };
 
     const handleLogout = async () => {
         await logout();
@@ -65,15 +74,17 @@ function Navbar() {
                     </ul>
 
                     {/* Search Bar */}
-                    <div className="d-flex luxe-search-container mx-lg-4 my-2 my-lg-0">
+                    <form className="d-flex luxe-search-container mx-lg-4 my-2 my-lg-0" onSubmit={handleSearch} role="search">
                         <i className="bi bi-search luxe-search-icon"></i>
                         <input
                             className="form-control luxe-search-input"
                             type="search"
                             placeholder="Buscar productos..."
                             aria-label="Search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                    </div>
+                    </form>
 
                     {/* Right Action Icons */}
                     <div className="luxe-actions-group d-flex align-items-center">

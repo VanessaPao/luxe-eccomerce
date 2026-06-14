@@ -19,6 +19,7 @@ export default function FiltersSidebar({
   sizes,
   materials,
   colors,
+  maxPrice = 1000,
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -107,15 +108,15 @@ export default function FiltersSidebar({
           <div
             className="price-track"
             style={{
-              '--price-min': `${(filters.priceMin / 1000) * 100}%`,
-              '--price-max': `${(filters.priceMax / 1000) * 100}%`,
+              '--price-min': `${(filters.priceMin / maxPrice) * 100}%`,
+              '--price-max': `${(filters.priceMax / maxPrice) * 100}%`,
             }}
           />
           <input
             type="range"
             name="priceMin"
             min="0"
-            max="1000"
+            max={maxPrice}
             value={filters.priceMin}
             onChange={handlePriceChange}
             className="price-thumb price-thumb-min"
@@ -124,7 +125,7 @@ export default function FiltersSidebar({
             type="range"
             name="priceMax"
             min="0"
-            max="1000"
+            max={maxPrice}
             value={filters.priceMax}
             onChange={handlePriceChange}
             className="price-thumb price-thumb-max"

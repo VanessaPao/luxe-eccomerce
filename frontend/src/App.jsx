@@ -13,6 +13,7 @@ import Checkout from './pages/CheckoutFlow/Checkout';
 import PaymentSuccess from './pages/CheckoutFlow/PaymentSuccess';
 import PaymentCancel from './pages/CheckoutFlow/PaymentCancel';
 import ProductDetail from './pages/Catalog/ProductDetail';
+import SearchResults from './pages/SearchResults';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -37,6 +38,9 @@ function App() {
               <Route path="/hombre" element={<Hombre />} />
               <Route path="/accesorios" element={<Accesorios />} />
               <Route path="/rebajas" element={<Rebajas />} />
+
+              {/* Búsqueda */}
+              <Route path="/buscar" element={<SearchResults />} />
 
               {/* Detalle de producto — :id es el ID del documento en Firestore */}
               <Route path="/productos/:id" element={<ProductDetail />} />

@@ -12,7 +12,59 @@ import {
  */
 export async function getProducts(req, res) {
   try {
-    const products = await getAllProducts();
+    let products = await getAllProducts();
+
+    // ── Filtrado por query params (server-side) ─────────────────────────
+    const { department, category, type, size, material, color, priceMin, priceMax, sale } = req.query;
+
+    if (department) {
+      const dept = department.toLowerCase();
+      products = products.filter(p => (p.department || '').toLowerCase() === dept);
+    }
+
+    if (category) {
+      const cat = category.toLowerCase();
+      products = products.filter(p => (p.type || p.category || '').toLowerCase() === cat);
+    }
+
+    if (type) {
+      const t = type.toLowerCase();
+      products = products.filter(p => (p.type || '').toLowerCase() === t);
+    }
+
+    if (size) {
+      const sizeList = size.split(',').map(s => s.trim());
+      products = products.filter(p => {
+        if (p.sizes && typeof p.sizes === 'object') {
+          return Object.keys(p.sizes).some(s => sizeList.includes(s));
+        }
+        return sizeList.includes(p.size);
+      });
+    }
+
+    if (material) {
+      const matList = material.split(',').map(m => m.trim());
+      products = products.filter(p => matList.includes(p.material));
+    }
+
+    if (color) {
+      const colList = color.split(',').map(c => c.trim());
+      products = products.filter(p => colList.includes(p.color));
+    }
+
+    if (priceMin !== undefined || priceMax !== undefined) {
+      const min = priceMin !== undefined ? Number(priceMin) : 0;
+      const max = priceMax !== undefined ? Number(priceMax) : Infinity;
+      products = products.filter(p => {
+        const activePrice = (p.sale && p.salePrice != null) ? p.salePrice : p.price;
+        return activePrice >= min && activePrice <= max;
+      });
+    }
+
+    if (sale === 'true') {
+      products = products.filter(p => p.sale === true);
+    }
+
     res.json(products);
   } catch (error) {
     console.error("❌ Error al obtener productos de Firestore:", error);

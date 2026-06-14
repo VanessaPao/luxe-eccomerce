@@ -44,13 +44,68 @@ const router = express.Router();
  */
 router.get("/", getProducts);
 
+/**
+ * @openapi
+ * /api/products/sale:
+ *   get:
+ *     tags: [Productos]
+ *     summary: Obtener productos en rebaja
+ *     description: Devuelve únicamente los productos que tienen sale === true.
+ *     responses:
+ *       200:
+ *         description: Lista de productos en rebaja
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: "#/components/schemas/Product"
+ *       500:
+ *         description: Error del servidor
+ */
 router.get("/sale", async (req, res) => {
   try {
-    const products = await getAllProducts();
-    if (Array.isArray(products)) {
-      return res.json(products.filter(p => p.sale === true));
+    let products = await getAllProducts();
+    if (!Array.isArray(products)) return res.json([]);
+
+    products = products.filter(p => p.sale === true);
+
+    // Aplicar los mismos filtros que GET /api/products
+    const { category, type, size, material, color, priceMin, priceMax } = req.query;
+
+    if (category) {
+      const cat = category.toLowerCase();
+      products = products.filter(p => (p.type || p.category || '').toLowerCase() === cat);
     }
-    res.json([]);
+    if (type) {
+      const t = type.toLowerCase();
+      products = products.filter(p => (p.type || '').toLowerCase() === t);
+    }
+    if (size) {
+      const sizeList = size.split(',').map(s => s.trim());
+      products = products.filter(p => {
+        if (p.sizes && typeof p.sizes === 'object') return Object.keys(p.sizes).some(s => sizeList.includes(s));
+        return sizeList.includes(p.size);
+      });
+    }
+    if (material) {
+      const matList = material.split(',').map(m => m.trim());
+      products = products.filter(p => matList.includes(p.material));
+    }
+    if (color) {
+      const colList = color.split(',').map(c => c.trim());
+      products = products.filter(p => colList.includes(p.color));
+    }
+    if (priceMin !== undefined || priceMax !== undefined) {
+      const min = priceMin !== undefined ? Number(priceMin) : 0;
+      const max = priceMax !== undefined ? Number(priceMax) : Infinity;
+      products = products.filter(p => {
+        const activePrice = (p.sale && p.salePrice != null) ? p.salePrice : p.price;
+        return activePrice >= min && activePrice <= max;
+      });
+    }
+
+    res.json(products);
   } catch (error) {
     console.error("Error obteniendo productos en rebaja:", error);
     res.status(500).json({ error: "Error al obtener productos en rebaja." });

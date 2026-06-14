@@ -37,7 +37,7 @@ export default function ProductDetail() {
   // ── Click-to-zoom (inline expanded) state ──
   const [clickZoomed, setClickZoomed] = useState(false);
   const [isHoveringImage, setIsHoveringImage] = useState(false);
-  const [clickZoomBg, setClickZoomBg] = useState({ x: 50, y: 50 });
+  const [clickZoomOrigin, setClickZoomOrigin] = useState({ x: 50, y: 50 });
 
   // ── Mobile pinch-to-zoom state ──
   const [mobileZoom, setMobileZoom] = useState(1);
@@ -72,10 +72,10 @@ export default function ProductDetail() {
     const y = e.clientY - rect.top;
 
     if (clickZoomed) {
-      // Pan the zoomed image by mouse position
-      const bgX = (x / rect.width) * 100;
-      const bgY = (y / rect.height) * 100;
-      setClickZoomBg({ x: bgX, y: bgY });
+      // Pan the zoomed image by adjusting transform-origin
+      const originX = (x / rect.width) * 100;
+      const originY = (y / rect.height) * 100;
+      setClickZoomOrigin({ x: originX, y: originY });
       return;
     }
 
@@ -99,7 +99,7 @@ export default function ProductDetail() {
       const next = !prev;
       if (next) {
         setLensActive(false);
-        setClickZoomBg({ x: 50, y: 50 });
+        setClickZoomOrigin({ x: 50, y: 50 });
       } else {
         setLensActive(true);
       }
@@ -235,27 +235,20 @@ export default function ProductDetail() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Normal image or click-zoomed image */}
-          {clickZoomed ? (
-            <div
-              className="detail-image-zoomed"
-              style={{
-                backgroundImage: `url(${product.image})`,
-                backgroundPosition: `${clickZoomBg.x}% ${clickZoomBg.y}%`,
-                backgroundSize: `${ZOOM_FACTOR * 120}%`,
-              }}
-            />
-          ) : (
-            <img
-              src={product.image}
-              alt={product.name}
-              className={`detail-image-img${mobileZoom > 1 ? ' mobile-zoomed' : ''}`}
-              draggable={false}
-              style={mobileZoom > 1 ? {
-                transform: `scale(${mobileZoom}) translate(${mobilePan.x / mobileZoom}px, ${mobilePan.y / mobileZoom}px)`,
-              } : undefined}
-            />
-          )}
+          {/* Image — always rendered, zoom via transform: scale */}
+          <img
+            src={product.image}
+            alt={product.name}
+            className={`detail-image-img${mobileZoom > 1 ? ' mobile-zoomed' : ''}${clickZoomed ? ' click-zoom-active' : ''}`}
+            draggable={false}
+            style={clickZoomed ? {
+              transform: `scale(${ZOOM_FACTOR})`,
+              transformOrigin: `${clickZoomOrigin.x}% ${clickZoomOrigin.y}%`,
+              transition: 'transform-origin 0.08s linear',
+            } : mobileZoom > 1 ? {
+              transform: `scale(${mobileZoom}) translate(${mobilePan.x / mobileZoom}px, ${mobilePan.y / mobileZoom}px)`,
+            } : undefined}
+          />
 
           {/* Magnifier lens — desktop only, only when not click-zoomed */}
           {lensActive && !clickZoomed && (

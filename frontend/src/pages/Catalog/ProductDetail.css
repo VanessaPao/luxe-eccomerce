@@ -185,15 +185,14 @@
 .detail-image.click-zoomed {
   cursor: crosshair;
   box-shadow: 0 0 0 2px var(--accent-gold, #d4af37), 0 20px 50px rgba(0,0,0,0.15);
+  overflow: hidden;
 }
 
-/* Zoomed background-image fill */
-.detail-image-zoomed {
-  width: 100%;
-  aspect-ratio: 3/4;
-  background-repeat: no-repeat;
-  display: block;
-  transition: background-position 0.05s linear;
+/* Click-zoomed: image scales up in place, container clips it */
+.detail-image-img.click-zoom-active {
+  transition: transform-origin 0.08s linear;
+  will-change: transform;
+  cursor: crosshair;
 }
 
 /* Exit hint (bottom-right, visible while zoomed) */

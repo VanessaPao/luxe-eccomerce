@@ -102,8 +102,31 @@ const router = express.Router();
 router.post("/", create);
 
 /**
- * GET /api/orders/user/:userId
- * Obtiene todas las órdenes de un usuario específico.
+ * @openapi
+ * /api/orders/user/{userId}:
+ *   get:
+ *     tags: [Órdenes]
+ *     summary: Obtener órdenes de un usuario
+ *     description: Devuelve todas las órdenes de un usuario específico, ordenadas por fecha descendente.
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: ID del usuario en Firebase Auth
+ *         schema:
+ *           type: string
+ *         example: "abc123xyz"
+ *     responses:
+ *       200:
+ *         description: Lista de órdenes del usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: "#/components/schemas/Order"
+ *       500:
+ *         description: Error del servidor
  */
 router.get("/user/:userId", async (req, res) => {
   try {
