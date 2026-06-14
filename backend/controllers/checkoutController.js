@@ -28,18 +28,21 @@ export const createCheckoutSession = async (req, res) => {
       quantity: item.quantity,
     }));
 
+    // URLs a las que Stripe redirigirá al usuario después del pago (éxito o cancelación).
+    // Usamos la variable de entorno FRONTEND_URL (primer origen) o localhost por defecto.
+    // Incluimos {CHECKOUT_SESSION_ID} en la URL de éxito. Stripe lo reemplazará 
+    // automáticamente por el ID real de la sesión antes de redirigir al usuario.
+    // Así nuestro frontend en PaymentSuccess.jsx podrá leer el session_id de la URL.
+    const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
+
     // Creamos la sesión de Checkout en Stripe. Esto genera una página de pago temporal
     // alojada por Stripe con los productos especificados.
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"], // Métodos de pago aceptados
       line_items: lineItems, // Los productos a cobrar
       mode: "payment", // Indica que es un pago único, no una suscripción
-      // URLs a las que Stripe redirigirá al usuario después del pago (éxito o cancelación).
-      // Incluimos {CHECKOUT_SESSION_ID} en la URL de éxito. Stripe lo reemplazará 
-      // automáticamente por el ID real de la sesión antes de redirigir al usuario.
-      // Así nuestro frontend en PaymentSuccess.jsx podrá leer el session_id de la URL.
-      success_url: "http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: "http://localhost:5173/carrito", // Asumiendo que el frontend usa /carrito en español
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/carrito`,
     });
 
     // Guardar pedido temporal en Firestore (indexado por session.id de Stripe)
@@ -100,9 +103,16 @@ export const verifyStripePayment = async (req, res) => {
           const pendingData = pendingSnap.data();
 
           // B. Leer todos los productos a descontar (deben leerse ANTES de cualquier escritura)
-          const productRefs = pendingData.items.map(item => 
-            db.collection("products").doc(String(item.productId || item.id))
-          );
+          // Usamos originalProductId si existe (el ID puro sin sufijo de talla),
+          // o hacemos fallback parseando el productId (ej: "abc_Grande" → "abc")
+          const productRefs = pendingData.items.map(item => {
+            const rawId = String(item.originalProductId || item.productId || item.id || '');
+            // Fallback: si no hay originalProductId, intentamos quitar sufijo de talla
+            const cleanId = item.originalProductId
+              ? rawId
+              : (rawId.includes('_') ? rawId.substring(0, rawId.lastIndexOf('_')) : rawId);
+            return db.collection("products").doc(cleanId);
+          });
           const productSnaps = await tx.getAll(...productRefs);
 
           // C. Validar disponibilidad de stock
@@ -196,9 +206,15 @@ export const simulateMercadoPagoOrder = async (req, res) => {
     // Para evitar cualquier error, creamos la orden y descontamos stock atómicamente.
     const orderId = await db.runTransaction(async (tx) => {
       // A. Leer todos los productos a descontar primero
-      const productRefs = items.map(item => 
-        db.collection("products").doc(String(item.productId || item.id))
-      );
+      // Usamos originalProductId si existe (el ID puro sin sufijo de talla),
+      // o hacemos fallback parseando el productId (ej: "abc_Grande" → "abc")
+      const productRefs = items.map(item => {
+        const rawId = String(item.originalProductId || item.productId || item.id || '');
+        const cleanId = item.originalProductId
+          ? rawId
+          : (rawId.includes('_') ? rawId.substring(0, rawId.lastIndexOf('_')) : rawId);
+        return db.collection("products").doc(cleanId);
+      });
       const productSnaps = await tx.getAll(...productRefs);
 
       // B. Validar disponibilidad

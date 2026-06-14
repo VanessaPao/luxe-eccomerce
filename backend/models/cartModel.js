@@ -44,8 +44,10 @@ export async function addCartItem(uid, product, quantity = 1) {
       product.sale && product.salePrice !== undefined && product.salePrice !== null
         ? product.salePrice
         : product.price;
+    const originalProductId = String(product.productId || product.id);
     await ref.set({
-      productId: docId,
+      productId: docId,               // ID del documento en el carrito (puede incluir talla)
+      originalProductId,              // ID real del producto en Firestore (sin sufijo de talla)
       name: product.name,
       price: activePrice,
       image: product.image,

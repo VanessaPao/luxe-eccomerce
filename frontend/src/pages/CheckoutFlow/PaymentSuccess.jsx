@@ -49,7 +49,7 @@ export default function PaymentSuccess() {
               await clearCart();
             }
           } else {
-            throw new Error(result.data.message || 'No se pudo verificar el pago con Stripe.');
+            throw new Error(data.error || data.message || 'No se pudo verificar el pago con Stripe.');
           }
         } else if (queryOrderId) {
           // --- Flujo de Mercado Pago (Simulado) ---

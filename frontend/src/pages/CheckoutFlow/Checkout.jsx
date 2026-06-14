@@ -118,6 +118,24 @@ export default function Checkout() {
 
     try {
       if (paymentMethod === 'stripe') {
+        // Mapear items para asegurar que productId es el ID puro de Firestore
+        // (el carrito puede guardar productId como "idProducto_Talla" para diferenciar tallas)
+        const checkoutItems = items.map((item) => {
+          // El productId puede tener sufijo de talla: "abc123_Grande" → "abc123"
+          const rawId = item.productId || item.id || '';
+          const cleanId = rawId.includes('_') 
+            ? rawId.substring(0, rawId.lastIndexOf('_')) 
+            : rawId;
+          return {
+            productId: cleanId,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity || 1,
+            size: item.size || null,
+          };
+        });
+
         // En lugar de usar Cloud Functions, ahora llamamos a nuestro servidor Express
         const response = await fetch(`${API_BASE_URL}/api/checkout`, {
           method: "POST",
@@ -126,7 +144,7 @@ export default function Checkout() {
           },
           // Pasamos los productos y la información del usuario al backend Express
           body: JSON.stringify({
-            items,
+            items: checkoutItems,
             userId: user.uid,
             shippingAddress: { phone, address }
           }),
