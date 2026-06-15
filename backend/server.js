@@ -20,6 +20,7 @@ import supportRouter from "./routes/support.js"; // <-- NUEVO: Panel de soporte
 import cartRouter from "./routes/cart.js";
 import reviewsRouter from "./routes/reviews.js";
 import carouselRouter from "./routes/carousel.js";
+import usersRouter from "./routes/users.js";
 
 // express() crea una "aplicación". Piénsala como el núcleo del servidor:
 // es el objeto que recibe peticiones (requests) y devuelve respuestas (responses).
@@ -109,6 +110,7 @@ app.use("/api/reviews", reviewsRouter);
 // Alias: algunos navegadores/clientes pueden enviar a /api/review (sin 's')
 app.use("/api/review", reviewsRouter);
 app.use("/api/carousel", carouselRouter);
+app.use("/api/users", usersRouter);
 
 // app.listen() es el momento en que el servidor "prende".
 // Le decimos: "escucha en el puerto 3001 y cuando estés listo, ejecuta esta función".

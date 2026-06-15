@@ -3,8 +3,9 @@ import ProductList from './ProductList';
 import ProductForm from './ProductForm';
 import SupportSupervision from './SupportSupervision';
 import { useAuth } from '../../context/AuthContext';
-import { BarChart3, ShoppingBag, Headphones, Image } from 'lucide-react';
+import { BarChart3, ShoppingBag, Headphones, Image, Users } from 'lucide-react';
 import CarouselManager from './CarouselManager';
+import UserList from './UserList';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -50,6 +51,12 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab('carousel')}
           >
             <Image size={16} /> Carrusel
+          </button>
+          <button 
+            className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+          >
+            <Users size={16} /> Usuarios
           </button>
           <button 
             className={`admin-nav-item ${activeTab === 'support' ? 'active' : ''}`}
@@ -103,6 +110,8 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'carousel' && <CarouselManager />}
+
+          {activeTab === 'users' && <UserList />}
 
           {activeTab === 'support' && <SupportSupervision />}
         </div>
