@@ -56,6 +56,192 @@ const router = Router();
  *       500:
  *         description: Error de configuración de claves de API de IA o error interno
  */
+
+// ── Sinónimos para buscar productos por categoría ────────────────────────────
+const CATEGORY_SYNONYMS = {
+  "faldas":      ["faldas", "falda"],
+  "vestidos":    ["vestidos", "vestido"],
+  "blusas":      ["blusas", "blusa", "tops", "top"],
+  "pantalones":  ["pantalones", "pantalon", "pants", "jeans", "mom jeans", "joggers"],
+  "shorts":      ["shorts", "short"],
+  "bomber":      ["bomber", "bombers", "chaqueta"],
+  "chaquetas":   ["chaquetas", "chaqueta", "jackets", "bomber"],
+  "abrigos":     ["abrigos", "abrigo", "coat", "coats"],
+  "busos":       ["busos", "buso", "suéter", "sweater", "sudadera"],
+  "leggings":    ["leggings", "legging", "mallas"],
+  "conjuntos":   ["conjuntos", "conjunto", "sets"],
+  "relojes":     ["relojes", "reloj", "watch", "watches"],
+  "cadenas":     ["cadenas", "cadena", "cuello", "collar", "necklace"],
+  "anillos":     ["anillos", "anillo", "ring", "rings"],
+  "aretes":      ["aretes", "arete", "pendientes", "earrings"],
+  "cinturones":  ["cinturones", "cinturon", "belt", "belts"],
+  "gafas":       ["gafas", "lentes", "glasses", "sunglasses", "anteojos"],
+  "bolsas":      ["bolsas", "bolsa", "bag", "bags", "cartera", "maletas"],
+  "billeteras":  ["billeteras", "billetera", "wallet"],
+  "tenis":       ["tenis", "sneakers", "zapatillas", "shoes"],
+  "botas":       ["botas", "bota", "boots"],
+  "sandalias":   ["sandalias", "sandalia", "slippers"],
+};
+
+// ── Sinónimos de departamentos ───────────────────────────────────────────────
+const DEPT_SYNONYMS = {
+  "mujer":   ["mujer", "mujeres", "femenino", "femenina", "damas", "dama"],
+  "hombre":  ["hombre", "hombres", "masculino", "masculina", "caballeros", "caballero"],
+  "accesorios": ["accesorios", "accesorio", "complementos"],
+};
+
+// ── Palabras clave que indican solicitud genérica de sugerencias ─────────────
+const SUGGESTION_KEYWORDS = [
+  "sugerencia", "sugerencias", "recomendacion", "recomendaciones",
+  "que tienes", "que hay", "que ofreces", "que venden",
+  "muestrame", "muestrame", "ensename", "enseñame",
+  "que me recomiendas", "que recomiendas", "que me sugieres",
+  "ayuda", "quiero ver", "quiero comprar",
+  "nuevo", "nuevos", "novedades", "lo ultimo", "lo último",
+  "populares", "favoritos", "mas vendido", "trending",
+];
+
+/**
+ * Analiza el mensaje del usuario y busca productos relevantes en el catálogo.
+ * Retorna los IDs de productos encontrados junto con la categoría detectada.
+ */
+function matchProducts(message, products) {
+  const lower = message.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar acentos
+    .replace(/[?!.,;:¡¿'"()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  let detectedCategory = null;
+  let detectedDept = null;
+  let isSaleRequest = false;
+
+  // Detectar si busca ofertas / rebajas
+  if (/\b(oferta|rebaja|rebajas|descuento|descuentos|promocion|promociones|barato|baratos|economico|economicos|sale)\b/.test(lower)) {
+    isSaleRequest = true;
+  }
+
+  // Detectar categoría
+  for (const [key, synonyms] of Object.entries(CATEGORY_SYNONYMS)) {
+    for (const syn of synonyms) {
+      if (lower.includes(syn)) {
+        detectedCategory = key;
+        break;
+      }
+    }
+    if (detectedCategory) break;
+  }
+
+  // Detectar departamento
+  for (const [key, synonyms] of Object.entries(DEPT_SYNONYMS)) {
+    for (const syn of synonyms) {
+      if (lower.includes(syn)) {
+        detectedDept = key;
+        break;
+      }
+    }
+    if (detectedDept) break;
+  }
+
+  // Detectar si es una solicitud genérica de sugerencias
+  const isSuggestionRequest = SUGGESTION_KEYWORDS.some(kw => lower.includes(kw));
+
+  // Si no se detectó nada específico, no intentar filtrar
+  if (!detectedCategory && !detectedDept && !isSaleRequest && !isSuggestionRequest) {
+    return { matchedIds: [], detectedCategory, detectedDept, isSaleRequest, isSuggestionRequest };
+  }
+
+  let candidates = [...products];
+
+  // Filtrar por departamento
+  if (detectedDept) {
+    const deptLower = detectedDept.toLowerCase();
+    candidates = candidates.filter(p =>
+      p.department && p.department.toLowerCase().includes(deptLower)
+    );
+  }
+
+  // Filtrar por categoría/tipo
+  if (detectedCategory) {
+    const catLower = detectedCategory.toLowerCase();
+    candidates = candidates.filter(p => {
+      const typeName = (p.type || "").toLowerCase();
+      const nameLower = (p.name || "").toLowerCase();
+      return typeName.includes(catLower) || nameLower.includes(catLower);
+    });
+  }
+
+  // Filtrar por ofertas
+  if (isSaleRequest) {
+    candidates = candidates.filter(p => p.sale === true || p.sale === "true");
+  }
+
+  // Si el filtro por categoría no dio resultados, buscar por nombre en todo el catálogo
+  if (detectedCategory && candidates.length === 0) {
+    const keywords = CATEGORY_SYNONYMS[detectedCategory] || [detectedCategory];
+    candidates = products.filter(p => {
+      const nameLower = (p.name || "").toLowerCase();
+      const typeName = (p.type || "").toLowerCase();
+      return keywords.some(k => nameLower.includes(k) || typeName.includes(k));
+    });
+    // Re-filtrar por dept si aplica
+    if (detectedDept) {
+      const deptLower = detectedDept.toLowerCase();
+      candidates = candidates.filter(p =>
+        p.department && p.department.toLowerCase().includes(deptLower)
+      );
+    }
+  }
+
+  // Si es solicitud genérica de sugerencias y no hubo filtro específico, mostrar destacados
+  if (isSuggestionRequest && candidates.length === products.length) {
+    // No se aplicó ningún filtro, seleccionar productos destacados
+    const onSale = candidates.filter(p => p.sale === true || p.sale === "true");
+    const rest = candidates.filter(p => !(p.sale === true || p.sale === "true"));
+    // Mezclar: primero ofertas, luego otros al azar
+    const shuffled = rest.sort(() => Math.random() - 0.5);
+    candidates = [...onSale, ...shuffled];
+  }
+
+  // Tomar máximo 3 productos, priorizar los que están en rebaja
+  const sorted = candidates.sort((a, b) => {
+    const aSale = a.sale === true || a.sale === "true" ? 1 : 0;
+    const bSale = b.sale === true || b.sale === "true" ? 1 : 0;
+    return bSale - aSale;
+  });
+
+  const matchedIds = sorted.slice(0, 3).map(p => p.id);
+  return { matchedIds, detectedCategory, detectedDept, isSaleRequest, isSuggestionRequest };
+}
+
+/**
+ * Convierte un producto del catálogo al formato que espera el frontend.
+ */
+function formatProduct(product, reason = "") {
+  const isOnSale = product.sale === true || product.sale === "true";
+  return {
+    id: product.id,
+    name: product.name,
+    price: isOnSale && product.salePrice != null ? product.salePrice : product.price,
+    originalPrice: isOnSale ? product.price : null,
+    sale: product.sale,
+    image: product.image,
+    department: product.department,
+    reason,
+  };
+}
+
+/**
+ * Genera una razón breve para la sugerencia basada en la categoría detectada.
+ */
+function generateReason(product, detectedCategory, detectedDept, isSaleRequest) {
+  const reasons = [];
+  if (isSaleRequest) reasons.push("Está en oferta");
+  if (detectedCategory) reasons.push(`Categoría: ${detectedCategory}`);
+  if (detectedDept) reasons.push(`Departamento: ${detectedDept}`);
+  return reasons.join(" · ") || (product.sale ? "Excelente precio" : "Muy popular");
+}
+
 router.post("/", async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -89,41 +275,55 @@ router.post("/", async (req, res) => {
           stock: d.stock,
           image: d.image,
         };
-      }).filter(p => p.stock > 0); // Solo productos con stock
+      }).filter(p => p.stock > 0);
     } catch (err) {
       console.warn("No se pudo cargar el catálogo para el chat:", err.message);
     }
 
+    // ── Matching server-side de productos (determinístico) ────────────────
+    const { matchedIds, detectedCategory, detectedDept, isSaleRequest, isSuggestionRequest } = matchProducts(message, products);
+
+    const matchedProducts = matchedIds
+      .map(id => {
+        const product = products.find(p => p.id === id);
+        if (!product) return null;
+        const reason = generateReason(product, detectedCategory, detectedDept, isSaleRequest);
+        return formatProduct(product, reason);
+      })
+      .filter(Boolean);
+
+    // ── Construir contexto de productos para la IA (solo como referencia) ─
     const productList = products.map(p => {
-      const isOnSale = p.sale === true || p.sale === 'true';
+      const isOnSale = p.sale === true || p.sale === "true";
       const priceInfo = isOnSale
-        ? `Precio Original: $${p.price} MXN | PRECIO REBAJADO: $${p.salePrice} MXN | ¡EN REBAJA / OFERTA!`
-        : `Precio: $${p.price} MXN`;
-      return `[ID:${p.id}] ${p.name} | Depto: ${p.department} | Tipo: ${p.type} | ${priceInfo} | Talla: ${p.size} | Color: ${p.color}`;
+        ? `$${p.price} MXN (rebajado a $${p.salePrice} MXN)`
+        : `$${p.price} MXN`;
+      return `- ${p.name} | ${p.department || ""} | ${p.type || ""} | ${priceInfo} | Talla: ${p.size || "N/A"}`;
     }).join("\n");
 
-    // ── System prompt con instrucción de respuesta en JSON ────────────────
-    const systemPrompt = `Eres LUXE AI, el asistente virtual oficial de la boutique de moda de lujo LUXE. Responde en español, de forma refinada y amable.
+    // ── System prompt: solo texto conversacional, sin JSON ────────────────
+    const saleHint = isSaleRequest
+      ? "\nEl usuario busca ofertas/rebajas. Menciona los precios rebajados en tu respuesta."
+      : "";
 
-CATÁLOGO ACTUAL (solo productos con stock disponible):
-${productList || "Sin productos disponibles en este momento."}
+    const isGenericSuggestion = !detectedCategory && !detectedDept && !isSaleRequest;
 
-INSTRUCCIONES IMPORTANTES:
-- Si el usuario te pregunta por ofertas, rebajas, promociones, descuentos, precios especiales o rebajados, debes recomendarle productos que tengan la etiqueta "¡EN REBAJA / OFERTA!" y explicarle que tienen un precio con descuento.
-- Cuando sugieras productos del catálogo, DEBES incluir su ID en tu respuesta.
-- Tu respuesta SIEMPRE debe ser un objeto JSON válido con este formato exacto:
-{
-  "text": "Tu respuesta amable aquí",
-  "products": [
-    { "id": "ID_DEL_PRODUCTO", "reason": "Por qué lo recomiendas (muy corto)" }
-  ]
-}
-- Si no sugieres ningún producto, "products" debe ser un array vacío [].
-- El campo "text" debe ser conciso para que quepa en un chat flotante.
-- No incluyas productos que el usuario no pidió o que no son relevantes.
-- SOLO responde con el JSON, sin texto antes ni después.`;
+    const matchHint = matchedProducts.length > 0
+      ? `\nEncontré estos productos que le podrían interesar al usuario: ${matchedProducts.map(p => p.name).join(", ")}. Menciónalos brevemente en tu respuesta. Las tarjetas de producto se muestran automáticamente.`
+      : isGenericSuggestion
+        ? "\nEl usuario pidió sugerencias. Menciona que puedes ayudarle a encontrar lo que busca. Pregunta si busca algo específico (ropa de mujer, hombre, accesorios, ofertas, etc.)"
+        : "\nNo encontré productos específicos para esta búsqueda. Pregunta al usuario si busca algo específico y sugiérele categorías disponibles: faldas, vestidos, blusas, chaquetas, accesorios, etc.";
 
-    let rawReply = "";
+    const systemPrompt = `Eres LUXE AI, el asistente virtual oficial de la boutique de moda de lujo LUXE. Responde en español, de forma refinada y amable.${saleHint}${matchHint}
+
+REGLAS:
+- Responde de forma breve y cálida (máximo 2-3 oraciones).
+- NO incluyas IDs de productos, precios ni tallas en tu respuesta. Esa información se muestra automáticamente en las tarjetas.
+- NO uses markdown como **negrita** ni formato especial. Solo texto plano.
+- Si el usuario pregunta por algo que no existe en el catálogo, sugiérele explorar las categorías disponibles.
+- Sé amable y profesional.`;
+
+    let replyText = "";
 
     // ─── MODO 1: OPENROUTER ───────────────────────────────────────────────
     if (openRouterKey) {
@@ -156,20 +356,19 @@ INSTRUCCIONES IMPORTANTES:
           model,
           messages,
           temperature: 0.7,
-          max_tokens: 600
+          max_tokens: 300
         })
       });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         console.error("OpenRouter API Error:", errData);
-        return res.status(response.status).json({
-          error: `Error de OpenRouter (Status ${response.status}): ${errData.error?.message || "No autorizado o sin saldo."}`
-        });
+        // Si la IA falla, usar respuesta de fallback con productos server-side
+        replyText = fallbackReply(detectedCategory, detectedDept, isSaleRequest, matchedProducts.length);
+      } else {
+        const data = await response.json();
+        replyText = (data.choices?.[0]?.message?.content || "").trim();
       }
-
-      const data = await response.json();
-      rawReply = data.choices?.[0]?.message?.content || "";
     } else {
       // ─── MODO 2: GEMINI DIRECTO ─────────────────────────────────────────
       const contents = [];
@@ -193,7 +392,7 @@ INSTRUCCIONES IMPORTANTES:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
         })
       });
 
@@ -204,57 +403,29 @@ INSTRUCCIONES IMPORTANTES:
         if (response.status === 400 || response.status === 403) friendlyMessage = `Clave inválida o acceso denegado (Error ${response.status}).`;
         else if (response.status === 429) friendlyMessage = `Cuota excedida (Error 429). Verifica tu plan.`;
         else if (errMsg) friendlyMessage = `Error de Gemini: ${errMsg}`;
-        return res.status(response.status).json({ error: friendlyMessage });
+        // Si la IA falla, usar respuesta de fallback
+        replyText = fallbackReply(detectedCategory, detectedDept, isSaleRequest, matchedProducts.length);
+      } else {
+        const data = await response.json();
+        replyText = (data.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
       }
-
-      const data = await response.json();
-      rawReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     }
 
-    // ── Parsear JSON de la respuesta ──────────────────────────────────────
-    let replyText = rawReply.trim();
-    let suggestedProducts = [];
+    // ── Limpiar la respuesta de la IA (por si acaso) ──────────────────────
+    replyText = replyText
+      .replace(/\*\*/g, "")
+      .replace(/ID[:\s]+[A-Za-z0-9_-]+/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
 
-    try {
-      // Extraer el JSON aunque el modelo ponga markdown code fences
-      const jsonMatch = rawReply.match(/```json\s*([\s\S]*?)```/) ||
-                        rawReply.match(/```\s*([\s\S]*?)```/) ||
-                        rawReply.match(/(\{[\s\S]*\})/);
-      
-      const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : rawReply;
-      const parsed = JSON.parse(jsonStr);
-
-      replyText = parsed.text || rawReply;
-
-      // Enriquecer los productos sugeridos con datos reales del catálogo
-      if (parsed.products && Array.isArray(parsed.products)) {
-        suggestedProducts = parsed.products
-          .map(sp => {
-            const product = products.find(p => p.id === sp.id);
-            if (!product) return null;
-            return {
-              id: product.id,
-              name: product.name,
-              price: product.sale && product.salePrice != null ? product.salePrice : product.price,
-              originalPrice: product.sale ? product.price : null,
-              sale: product.sale,
-              image: product.image,
-              department: product.department,
-              reason: sp.reason || "",
-            };
-          })
-          .filter(Boolean)
-          .slice(0, 3); // Máximo 3 productos sugeridos
-      }
-    } catch {
-      // Si la IA no respondió con JSON válido, usamos el texto puro como fallback
-      console.warn("Chat: La IA no devolvió JSON válido, usando texto puro.");
-      replyText = rawReply;
+    // Si la IA devolvió algo muy corto o vacío, usar fallback
+    if (!replyText || replyText.length < 5) {
+      replyText = fallbackReply(detectedCategory, detectedDept, isSaleRequest, matchedProducts.length);
     }
 
     res.status(200).json({
-      reply: replyText.trim(),
-      products: suggestedProducts,
+      reply: replyText,
+      products: matchedProducts,
     });
 
   } catch (error) {
@@ -262,5 +433,20 @@ INSTRUCCIONES IMPORTANTES:
     res.status(500).json({ error: "Error interno en el servidor de chat." });
   }
 });
+
+/**
+ * Respuesta de fallback cuando la IA no está disponible o no responde bien.
+ */
+function fallbackReply(category, dept, isSale, productCount) {
+  if (productCount > 0) {
+    const noun = category || "productos";
+    const saleText = isSale ? " en oferta" : "";
+    return `¡Encontré ${productCount} ${noun}${saleText} que podrían interesarte! Mira las tarjetas de abajo.`;
+  }
+  if (isSale) {
+    return "Lamentablemente no encontré ofertas disponibles en este momento. Puedes revisar nuestro catálogo completo para ver las promociones actuales.";
+  }
+  return "¿Qué tipo de prenda o accesorio buscas? Puedo ayudarte a encontrar faldas, vestidos, blusas, chaquetas, accesorios y más. ¡También tenemos ofertas especiales!";
+}
 
 export default router;

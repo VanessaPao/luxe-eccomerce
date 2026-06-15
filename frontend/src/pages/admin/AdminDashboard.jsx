@@ -3,7 +3,8 @@ import ProductList from './ProductList';
 import ProductForm from './ProductForm';
 import SupportSupervision from './SupportSupervision';
 import { useAuth } from '../../context/AuthContext';
-import { BarChart3, ShoppingBag, Headphones } from 'lucide-react';
+import { BarChart3, ShoppingBag, Headphones, Image } from 'lucide-react';
+import CarouselManager from './CarouselManager';
 import './Admin.css';
 
 const AdminDashboard = () => {
@@ -45,6 +46,12 @@ const AdminDashboard = () => {
             <ShoppingBag size={16} /> Productos
           </button>
           <button 
+            className={`admin-nav-item ${activeTab === 'carousel' ? 'active' : ''}`}
+            onClick={() => setActiveTab('carousel')}
+          >
+            <Image size={16} /> Carrusel
+          </button>
+          <button 
             className={`admin-nav-item ${activeTab === 'support' ? 'active' : ''}`}
             onClick={() => setActiveTab('support')}
           >
@@ -58,9 +65,11 @@ const AdminDashboard = () => {
           <h1>
             {activeTab === 'products' 
               ? 'Gestión de Productos' 
-              : activeTab === 'support' 
-                ? 'Supervisión de Soporte' 
-                : 'Panel de Control'}
+              : activeTab === 'carousel'
+                ? 'Gestión del Carrusel'
+                : activeTab === 'support' 
+                  ? 'Supervisión de Soporte' 
+                  : 'Panel de Control'}
           </h1>
           {activeTab === 'products' && !isFormOpen && (
             <button className="btn-primary" onClick={() => handleOpenForm()}>
@@ -92,6 +101,8 @@ const AdminDashboard = () => {
               )}
             </>
           )}
+
+          {activeTab === 'carousel' && <CarouselManager />}
 
           {activeTab === 'support' && <SupportSupervision />}
         </div>

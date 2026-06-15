@@ -38,6 +38,7 @@ Además de esta API Express, el proyecto usa **Cloud Functions para pagos**:
       { name: "Reseñas", description: "Reseñas y calificaciones de productos" },
       { name: "Chatbot", description: "Asistente de Inteligencia Artificial" },
       { name: "Soporte", description: "Panel de Tickets y Soporte Técnico" },
+      { name: "Carrusel", description: "Gestión del carrusel principal (Hero)" },
     ],
     components: {
       schemas: {
@@ -147,6 +148,22 @@ Además de esta API Express, el proyecto usa **Cloud Functions para pagos**:
           type: "object",
           properties: {
             error: { type: "string" },
+          },
+        },
+        CarouselSlide: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "ID del slide en Firestore" },
+            image: { type: "string", format: "uri", description: "URL de la imagen del slide" },
+            tag: { type: "string", description: "Etiqueta destacada (ej. NUEVA COLECCIÓN)" },
+            title: { type: "string", description: "Título principal del slide" },
+            subtitle: { type: "string", description: "Subtítulo o descripción del slide" },
+            ctaText: { type: "string", description: "Texto del botón de acción" },
+            ctaLink: { type: "string", description: "URL del botón de acción" },
+            order: { type: "integer", description: "Orden de aparición (menor = primero)" },
+            active: { type: "boolean", description: "Si el slide está activo y visible" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
       },

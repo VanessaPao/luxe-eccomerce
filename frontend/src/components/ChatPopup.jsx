@@ -9,6 +9,20 @@ import { Lock, Bot, Headphones, Ticket, X, Send } from 'lucide-react';
 import './ChatPopup.css';
 
 /* ─── AI Chat Tab ─────────────────────────────────────────────────────────── */
+/* Render inline markdown (**bold**) safely */
+function renderMarkdown(text) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.flatMap((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return [<strong key={i}>{part.slice(2, -2)}</strong>];
+    }
+    return part.split('\n').flatMap((line, j, arr) =>
+      j < arr.length - 1 ? [line, <br key={`br-${i}-${j}`} />] : [line]
+    );
+  });
+}
+
 function AiChat() {
   const [messages, setMessages] = useState([
     { sender: 'bot', text: '¡Hola! Bienvenido a LUXE. Soy tu asistente virtual de estilo. ¿Te gustaría buscar alguna prenda, accesorio o tienes dudas sobre tu pedido?' }
@@ -65,7 +79,7 @@ function AiChat() {
       <div className="chat-messages">
         {messages.map((msg, index) => (
           <div key={index}>
-            <div className={`chat-bubble ${msg.sender}`}>{msg.text}</div>
+            <div className={`chat-bubble ${msg.sender}`}>{msg.sender === 'bot' ? renderMarkdown(msg.text) : msg.text}</div>
             {msg.sender === 'bot' && msg.products && msg.products.length > 0 && (
               <div className="chat-product-cards">
                 {msg.products.map((product) => (

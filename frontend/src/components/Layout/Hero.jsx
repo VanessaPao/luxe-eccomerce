@@ -1,93 +1,121 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../utils/api';
 import './Hero.css';
 
-// Premium high-resolution Unsplash fashion images for the luxury carousel
-const slide1 = "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1600&auto=format&fit=crop";
-const slide2 = "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1600&auto=format&fit=crop";
-const slide3 = "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1600&auto=format&fit=crop";
+// Slides por defecto (se usan si la API no tiene datos)
+const DEFAULT_SLIDES = [
+  {
+    id: 'default-1',
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=1600&auto=format&fit=crop",
+    tag: "LUXE BOUTIQUE",
+    title: "Tu nueva era",
+    subtitle: "Moda premium que define tendencia. Descubre el estilo que buscabas.",
+    ctaText: "Explorar",
+    ctaLink: "/mujer",
+  },
+  {
+    id: 'default-2',
+    image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1600&auto=format&fit=crop",
+    tag: "Y2K COLLECTION",
+    title: "Retro es futuro",
+    subtitle: "Piezas que mezclan nostalgia y vanguardia. Estilo que no pasa de moda.",
+    ctaText: "Ver Colección",
+    ctaLink: "/mujer",
+  },
+  {
+    id: 'default-3',
+    image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=1600&auto=format&fit=crop",
+    tag: "JUST DROPPED",
+    title: "Diseñada para brillar",
+    subtitle: "Nuevas piezas que definen tendencia. Sé la primera en tenerlas.",
+    ctaText: "Ver Ahora",
+    ctaLink: "/mujer",
+  },
+  {
+    id: 'default-4',
+    image: "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=1600&auto=format&fit=crop",
+    tag: "UP TO 40% OFF",
+    title: "Estilo en oferta",
+    subtitle: "Lo que buscas, a precios que no vas a querer perderte.",
+    ctaText: "Comprar Ahora",
+    ctaLink: "/rebajas",
+  },
+  {
+    id: 'default-5',
+    image: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?q=80&w=1600&auto=format&fit=crop",
+    tag: "EXCLUSIVE",
+    title: "El toque final",
+    subtitle: "Bolsas, joyería y complementos que elevan cualquier outfit.",
+    ctaText: "Explorar",
+    ctaLink: "/accesorios",
+  },
+];
 
 function Hero() {
+  const [slides, setSlides] = useState(DEFAULT_SLIDES);
+
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/carousel`);
+        if (res.ok) {
+          const data = await res.json();
+          const activeSlides = data
+            .filter(s => s.active !== false && s.image && s.title)
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          if (activeSlides.length > 0) {
+            setSlides(activeSlides);
+          }
+        }
+      } catch {
+        // Si la API falla, se mantienen los slides por defecto
+      }
+    };
+    fetchSlides();
+  }, []);
+
   return (
     <div id="heroCarousel" className="carousel slide carousel-fade hero-carousel" data-bs-ride="carousel">
       {/* Indicators */}
       <div className="carousel-indicators luxe-indicators">
-        <button
-          type="button"
-          data-bs-target="#heroCarousel"
-          data-bs-slide-to="0"
-          className="active"
-          aria-current="true"
-          aria-label="Slide 1"
-        ></button>
-        <button
-          type="button"
-          data-bs-target="#heroCarousel"
-          data-bs-slide-to="1"
-          aria-label="Slide 2"
-        ></button>
-        <button
-          type="button"
-          data-bs-target="#heroCarousel"
-          data-bs-slide-to="2"
-          aria-label="Slide 3"
-        ></button>
+        {slides.map((slide, i) => (
+          <button
+            key={slide.id}
+            type="button"
+            data-bs-target="#heroCarousel"
+            data-bs-slide-to={i}
+            className={i === 0 ? "active" : ""}
+            aria-current={i === 0 ? "true" : undefined}
+            aria-label={`Slide ${i + 1}`}
+          />
+        ))}
       </div>
 
       {/* Slides */}
       <div className="carousel-inner">
-        {/* Slide 1 */}
-        <div className="carousel-item active hero-slide-item" data-bs-interval="5000">
-          <img src={slide1} className="d-block w-100 hero-img" alt="Nueva Colección" />
-          <div className="carousel-caption luxe-caption text-start">
-            <span className="luxe-tag">NUEVA COLECCIÓN</span>
-            <h1 className="luxe-title">Estilo que te define</h1>
-            <p className="luxe-desc">
-              Descubre prendas minimalistas y suéteres de lana premium diseñados para perdurar.
-            </p>
-            <div className="luxe-btn-group">
-              <a href="/mujer" className="btn luxe-btn-primary">
-                Explorar Colección
-              </a>
-              <a href="/rebajas" className="btn luxe-btn-secondary">
-                Ver Rebajas
-              </a>
+        {slides.map((slide, i) => (
+          <div
+            key={slide.id}
+            className={`carousel-item hero-slide-item ${i === 0 ? 'active' : ''}`}
+            data-bs-interval="5000"
+          >
+            <img src={slide.image} className="d-block w-100 hero-img" alt={slide.title} />
+            <div className="carousel-caption luxe-caption text-start">
+              {slide.tag && <span className="luxe-tag">{slide.tag}</span>}
+              <h1 className="luxe-title">{slide.title}</h1>
+              {slide.subtitle && (
+                <p className="luxe-desc">{slide.subtitle}</p>
+              )}
+              {slide.ctaText && (
+                <div className="luxe-btn-group">
+                  <a href={slide.ctaLink || '#'} className="btn luxe-btn-primary">
+                    {slide.ctaText}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-
-        {/* Slide 2 */}
-        <div className="carousel-item hero-slide-item" data-bs-interval="5000">
-          <img src={slide2} className="d-block w-100 hero-img" alt="Accesorios Exclusivos" />
-          <div className="carousel-caption luxe-caption text-start">
-            <span className="luxe-tag">EDICIÓN LIMITADA</span>
-            <h1 className="luxe-title">Detalles que marcan la diferencia</h1>
-            <p className="luxe-desc">
-              Complementa tu outfit con nuestra joyería geométrica y bolsos de piel italiana.
-            </p>
-            <div className="luxe-btn-group">
-              <a href="/accesorios" className="btn luxe-btn-primary">
-                Ver Accesorios
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Slide 3 */}
-        <div className="carousel-item hero-slide-item" data-bs-interval="5000">
-          <img src={slide3} className="d-block w-100 hero-img" alt="Colección Hombre" />
-          <div className="carousel-caption luxe-caption text-start">
-            <span className="luxe-tag">TENDENCIAS URBANAS</span>
-            <h1 className="luxe-title">Sofisticación diaria</h1>
-            <p className="luxe-desc">
-              Explora abrigos, chaquetas y calzado que combinan comodidad y alta costura.
-            </p>
-            <div className="luxe-btn-group">
-              <a href="/hombre" className="btn luxe-btn-primary">
-                Comprar Hombre
-              </a>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Controls */}
