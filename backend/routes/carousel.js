@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../firebase/admin.js";
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -44,6 +45,8 @@ router.get("/", async (req, res) => {
  *   post:
  *     tags: [Carrusel]
  *     summary: Crear un nuevo slide (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Registra un nuevo slide en el carrusel principal.
  *     requestBody:
  *       required: true
@@ -93,7 +96,7 @@ router.get("/", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.post("/", async (req, res) => {
+router.post("/", authenticateToken, requireRole("admin"), async (req, res) => {
   try {
     const { image, tag, title, subtitle, ctaText, ctaLink, order, active } = req.body;
 
@@ -128,6 +131,8 @@ router.post("/", async (req, res) => {
  *   put:
  *     tags: [Carrusel]
  *     summary: Reordenar slides en lote (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Actualiza el orden de múltiples slides de forma atómica. DEBE ir antes de /:id.
  *     requestBody:
  *       required: true
@@ -158,7 +163,7 @@ router.post("/", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.put("/reorder/batch", async (req, res) => {
+router.put("/reorder/batch", authenticateToken, requireRole("admin"), async (req, res) => {
   try {
     const { slides } = req.body;
 
@@ -186,6 +191,8 @@ router.put("/reorder/batch", async (req, res) => {
  *   put:
  *     tags: [Carrusel]
  *     summary: Actualizar un slide (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Actualiza parcialmente los campos de un slide existente.
  *     parameters:
  *       - in: path
@@ -225,7 +232,7 @@ router.put("/reorder/batch", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", authenticateToken, requireRole("admin"), async (req, res) => {
   try {
     const { id } = req.params;
     const { image, tag, title, subtitle, ctaText, ctaLink, order, active } = req.body;
@@ -261,6 +268,8 @@ router.put("/:id", async (req, res) => {
  *   delete:
  *     tags: [Carrusel]
  *     summary: Eliminar un slide (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Elimina permanentemente un slide del carrusel.
  *     parameters:
  *       - in: path
@@ -277,7 +286,7 @@ router.put("/:id", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authenticateToken, requireRole("admin"), async (req, res) => {
   try {
     const { id } = req.params;
     const docRef = db.collection(COLLECTION).doc(id);
@@ -301,6 +310,8 @@ router.delete("/:id", async (req, res) => {
  *   post:
  *     tags: [Carrusel]
  *     summary: Sembrar slides por defecto (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Inserta 5 slides predefinidos en Firestore solo si la colección está vacía. No duplica datos.
  *     responses:
  *       201:
@@ -319,7 +330,7 @@ router.delete("/:id", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.post("/seed", async (req, res) => {
+router.post("/seed", authenticateToken, requireRole("admin"), async (req, res) => {
   try {
     const snapshot = await db.collection(COLLECTION).get();
     if (!snapshot.empty) {

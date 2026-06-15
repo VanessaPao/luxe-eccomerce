@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { API_BASE_URL } from '../utils/api';
+import { API_BASE_URL, authFetch } from '../utils/api';
 import { subscribeCart } from '../firebase/firestore';
 
 const CartContext = createContext(null);
@@ -28,7 +28,7 @@ export function CartProvider({ children }) {
       if (guestItems.length > 0) {
         Promise.all(
           guestItems.map((item) =>
-            fetch(`${API_BASE_URL}/api/cart/${user.uid}`, {
+            authFetch(`${API_BASE_URL}/api/cart/${user.uid}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -59,7 +59,7 @@ export function CartProvider({ children }) {
   const addItem = useCallback(async (product, quantity = 1) => {
     const size = product.selectedSize || product.size || null;
     if (user) {
-      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}`, {
+      const res = await authFetch(`${API_BASE_URL}/api/cart/${user.uid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -113,7 +113,7 @@ export function CartProvider({ children }) {
   /* ── Eliminar del carrito ── */
   const removeItem = useCallback(async (productId) => {
     if (user) {
-      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}/${productId}`, { method: 'DELETE' });
+      const res = await authFetch(`${API_BASE_URL}/api/cart/${user.uid}/${productId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error al eliminar del carrito');
     } else {
       setItems((prev) => {
@@ -127,7 +127,7 @@ export function CartProvider({ children }) {
   /* ── Actualizar cantidad ── */
   const updateQty = useCallback(async (productId, quantity) => {
     if (user) {
-      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}/${productId}`, {
+      const res = await authFetch(`${API_BASE_URL}/api/cart/${user.uid}/${productId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quantity }),
@@ -149,7 +149,7 @@ export function CartProvider({ children }) {
   /* ── Vaciar carrito ── */
   const clearCart = useCallback(async () => {
     if (user) {
-      const res = await fetch(`${API_BASE_URL}/api/cart/${user.uid}`, { method: 'DELETE' });
+      const res = await authFetch(`${API_BASE_URL}/api/cart/${user.uid}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error al vaciar carrito');
     } else {
       localStorage.removeItem(GUEST_KEY);

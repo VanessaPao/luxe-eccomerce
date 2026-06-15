@@ -1,5 +1,6 @@
 import express from "express";
 import { createCheckoutSession, verifyStripePayment, simulateMercadoPagoOrder } from "../controllers/checkoutController.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -15,6 +16,8 @@ const router = express.Router();
  *   post:
  *     tags: [Checkout]
  *     summary: Crear sesión de pago en Stripe
+ *     security:
+ *       - BearerAuth: []
  *     description: Genera una Stripe Checkout Session recibiendo los productos del carrito.
  *     requestBody:
  *       required: true
@@ -74,7 +77,7 @@ const router = express.Router();
  *             example:
  *               error: "No se pudo crear la sesión de pago."
  */
-router.post("/", createCheckoutSession);
+router.post("/", authenticateToken, createCheckoutSession);
 
 /**
  * @openapi
@@ -82,6 +85,8 @@ router.post("/", createCheckoutSession);
  *   post:
  *     tags: [Checkout]
  *     summary: Verificar pago de Stripe y crear la orden
+ *     security:
+ *       - BearerAuth: []
  *     description: Verifica que la Stripe Session se haya completado y crea la orden final.
  *     requestBody:
  *       required: true
@@ -115,7 +120,7 @@ router.post("/", createCheckoutSession);
  *       500:
  *         description: Error interno al verificar.
  */
-router.post("/verify", verifyStripePayment);
+router.post("/verify", authenticateToken, verifyStripePayment);
 
 /**
  * @openapi
@@ -123,6 +128,8 @@ router.post("/verify", verifyStripePayment);
  *   post:
  *     tags: [Checkout]
  *     summary: Simular pago de Mercado Pago
+ *     security:
+ *       - BearerAuth: []
  *     description: Simula de forma atómica la creación de la orden simulando una transacción con Mercado Pago.
  *     requestBody:
  *       required: true
@@ -150,6 +157,6 @@ router.post("/verify", verifyStripePayment);
  *       500:
  *         description: Error interno del servidor
  */
-router.post("/mercadopago", simulateMercadoPagoOrder);
+router.post("/mercadopago", authenticateToken, simulateMercadoPagoOrder);
 
 export default router;

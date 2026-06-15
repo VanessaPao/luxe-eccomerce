@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import { Trash2, Pencil } from 'lucide-react';
 
 const ProductList = ({ onEditProduct, refreshKey }) => {
@@ -25,7 +25,7 @@ const ProductList = ({ onEditProduct, refreshKey }) => {
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/products/${id}`, { method: 'DELETE' });
+        const res = await authFetch(`${API_BASE_URL}/api/products/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error('Error al eliminar');
         setProducts(prev => prev.filter(p => p.id !== id));
       } catch (error) {

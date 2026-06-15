@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import { Ticket, User, MessageSquare, Settings, Lock, FolderOpen, Clock, CheckCircle2, Zap, AlertTriangle, X } from 'lucide-react';
 import './SupportSupervision.css';
 
@@ -72,7 +72,7 @@ export default function SupportSupervision() {
   // Obtener métricas desde el Backend Express
   const fetchMetrics = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/support/admin/metrics`);
+      const res = await authFetch(`${API_BASE_URL}/api/support/admin/metrics`);
       if (!res.ok) throw new Error('Error al obtener las métricas del backend.');
       const data = await res.json();
       setMetrics(data);

@@ -6,6 +6,7 @@ import {
   likeReview,
   dislikeReview,
 } from "../controllers/reviewController.js";
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -43,6 +44,8 @@ router.get("/:productId", getReviews);
  *   post:
  *     tags: [Reseñas]
  *     summary: Crear una reseña
+ *     security:
+ *       - BearerAuth: []
  *     description: Registra una nueva reseña para un producto.
  *     parameters:
  *       - in: path
@@ -71,7 +74,7 @@ router.get("/:productId", getReviews);
  *       500:
  *         description: Error del servidor
  */
-router.post("/:productId", createReview);
+router.post("/:productId", authenticateToken, createReview);
 
 /**
  * @openapi
@@ -79,6 +82,8 @@ router.post("/:productId", createReview);
  *   delete:
  *     tags: [Reseñas]
  *     summary: Eliminar una reseña (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Elimina una reseña específica de un producto.
  *     parameters:
  *       - in: path
@@ -99,7 +104,7 @@ router.post("/:productId", createReview);
  *       500:
  *         description: Error del servidor
  */
-router.delete("/:productId/:reviewId", deleteReview);
+router.delete("/:productId/:reviewId", authenticateToken, requireRole("admin"), deleteReview);
 
 /**
  * @openapi
@@ -107,6 +112,8 @@ router.delete("/:productId/:reviewId", deleteReview);
  *   post:
  *     tags: [Reseñas]
  *     summary: Toggle like en una reseña
+ *     security:
+ *       - BearerAuth: []
  *     description: Agrega o quita un like a una reseña (toggle).
  *     parameters:
  *       - in: path
@@ -134,7 +141,7 @@ router.delete("/:productId/:reviewId", deleteReview);
  *       500:
  *         description: Error del servidor
  */
-router.post("/:productId/:reviewId/like", likeReview);
+router.post("/:productId/:reviewId/like", authenticateToken, likeReview);
 
 /**
  * @openapi
@@ -142,6 +149,8 @@ router.post("/:productId/:reviewId/like", likeReview);
  *   post:
  *     tags: [Reseñas]
  *     summary: Toggle dislike en una reseña
+ *     security:
+ *       - BearerAuth: []
  *     description: Agrega o quita un dislike a una reseña (toggle).
  *     parameters:
  *       - in: path
@@ -169,6 +178,6 @@ router.post("/:productId/:reviewId/like", likeReview);
  *       500:
  *         description: Error del servidor
  */
-router.post("/:productId/:reviewId/dislike", dislikeReview);
+router.post("/:productId/:reviewId/dislike", authenticateToken, dislikeReview);
 
 export default router;

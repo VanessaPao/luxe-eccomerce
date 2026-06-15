@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import { uploadImageToCloudinary } from '../../utils/cloudinary';
 import { Image, Plus, Trash2, Eye, EyeOff, Save, X, ArrowUp, ArrowDown } from 'lucide-react';
 import './Admin.css';
@@ -69,7 +69,7 @@ const CarouselManager = () => {
         : `${API_BASE_URL}/api/carousel/${editingSlide.id}`;
       const method = isNew ? 'POST' : 'PUT';
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingSlide),
@@ -90,7 +90,7 @@ const CarouselManager = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este slide?')) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/carousel/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`${API_BASE_URL}/api/carousel/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error al eliminar');
       await fetchSlides();
     } catch (err) {
@@ -101,7 +101,7 @@ const CarouselManager = () => {
 
   const handleToggleActive = async (slide) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/carousel/${slide.id}`, {
+      const res = await authFetch(`${API_BASE_URL}/api/carousel/${slide.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !slide.active }),
@@ -117,7 +117,7 @@ const CarouselManager = () => {
   const handleSeedDefaults = async () => {
     if (!window.confirm('¿Cargar los 5 slides por defecto? No se duplicarán si ya existen.')) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/carousel/seed`, { method: 'POST' });
+      const res = await authFetch(`${API_BASE_URL}/api/carousel/seed`, { method: 'POST' });
       const data = await res.json();
       alert(data.message);
       await fetchSlides();
@@ -137,7 +137,7 @@ const CarouselManager = () => {
     setSlides(reordered);
 
     try {
-      await fetch(`${API_BASE_URL}/api/carousel/reorder/batch`, {
+      await authFetch(`${API_BASE_URL}/api/carousel/reorder/batch`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slides: reordered.map(s => ({ id: s.id, order: s.order })) }),

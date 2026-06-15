@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../utils/api';
+import { API_BASE_URL, authFetch } from '../utils/api';
 import { uploadImageToCloudinary } from '../utils/cloudinary';
 import { MessageSquare, ThumbsUp, ThumbsDown, Trash2, Image as ImageIcon, Send, Star } from 'lucide-react';
 import './Reviews.css';
@@ -76,7 +76,7 @@ export default function Reviews({ productId, onRatingChange }) {
         imageUrl = await uploadImageToCloudinary(imageFile);
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/reviews/${productId}`, {
+      const res = await authFetch(`${API_BASE_URL}/api/reviews/${productId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -113,7 +113,7 @@ export default function Reviews({ productId, onRatingChange }) {
   const handleDelete = async (reviewId) => {
     if (!window.confirm('¿Eliminar este comentario?')) return;
     try {
-      await fetch(`${API_BASE_URL}/api/reviews/${productId}/${reviewId}`, { method: 'DELETE' });
+      await authFetch(`${API_BASE_URL}/api/reviews/${productId}/${reviewId}`, { method: 'DELETE' });
       await fetchReviews();
     } catch (err) {
       console.error('Error deleting review:', err);
@@ -123,7 +123,7 @@ export default function Reviews({ productId, onRatingChange }) {
   const handleLike = async (reviewId) => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/reviews/${productId}/${reviewId}/like`, {
+      const res = await authFetch(`${API_BASE_URL}/api/reviews/${productId}/${reviewId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.uid }),
@@ -142,7 +142,7 @@ export default function Reviews({ productId, onRatingChange }) {
   const handleDislike = async (reviewId) => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/reviews/${productId}/${reviewId}/dislike`, {
+      const res = await authFetch(`${API_BASE_URL}/api/reviews/${productId}/${reviewId}/dislike`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.uid }),

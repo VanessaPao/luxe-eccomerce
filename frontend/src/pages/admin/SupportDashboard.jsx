@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { Headphones, Ticket, User, Send, Sparkles, X } from 'lucide-react';
@@ -46,7 +46,7 @@ export default function SupportDashboard() {
       } else {
         url = `${API_BASE_URL}/api/support/tickets/user/${user.uid}`;
       }
-      const res = await fetch(url);
+      const res = await authFetch(url);
       if (res.ok) {
         const list = await res.json();
         setTickets(list);
@@ -99,7 +99,7 @@ export default function SupportDashboard() {
 
   const handleStatusChange = async (ticketId, newStatus) => {
     try {
-      await fetch(`${API_BASE_URL}/api/support/tickets/${ticketId}/status`, {
+      await authFetch(`${API_BASE_URL}/api/support/tickets/${ticketId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -119,7 +119,7 @@ export default function SupportDashboard() {
     if (!reply.trim() || !selected) return;
     setSending(true);
     try {
-      await fetch(`${API_BASE_URL}/api/support/tickets/${selected.id}/reply`, {
+      await authFetch(`${API_BASE_URL}/api/support/tickets/${selected.id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,7 +141,7 @@ export default function SupportDashboard() {
     if (!newSubject.trim() || !newMessage.trim()) return;
     setCreatingTicket(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/support/tickets`, {
+      const res = await authFetch(`${API_BASE_URL}/api/support/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

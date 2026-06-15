@@ -12,6 +12,7 @@ import {
   removeProduct,
 } from "../controllers/productController.js";
 import { getAllProducts } from "../models/productModel.js";
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -163,6 +164,8 @@ router.get("/:id", getProduct);
  *   post:
  *     tags: [Productos]
  *     summary: Crear un nuevo producto (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Registra un nuevo producto en el catálogo de Firestore.
  *     requestBody:
  *       required: true
@@ -214,7 +217,7 @@ router.get("/:id", getProduct);
  *       500:
  *         description: Error interno del servidor.
  */
-router.post("/", addProduct);
+router.post("/", authenticateToken, requireRole("admin"), addProduct);
 
 /**
  * @openapi
@@ -222,6 +225,8 @@ router.post("/", addProduct);
  *   patch:
  *     tags: [Productos]
  *     summary: Actualizar parcialmente un producto (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Modifica los campos indicados de un producto en Firestore según su ID.
  *     parameters:
  *       - in: path
@@ -272,7 +277,7 @@ router.post("/", addProduct);
  *       500:
  *         description: Error interno del servidor.
  */
-router.patch("/:id", editProduct);
+router.patch("/:id", authenticateToken, requireRole("admin"), editProduct);
 
 /**
  * @openapi
@@ -280,6 +285,8 @@ router.patch("/:id", editProduct);
  *   delete:
  *     tags: [Productos]
  *     summary: Eliminar un producto (Solo Admin)
+ *     security:
+ *       - BearerAuth: []
  *     description: Elimina definitivamente un producto de Firestore según su ID.
  *     parameters:
  *       - in: path
@@ -296,6 +303,6 @@ router.patch("/:id", editProduct);
  *       500:
  *         description: Error interno del servidor.
  */
-router.delete("/:id", removeProduct);
+router.delete("/:id", authenticateToken, requireRole("admin"), removeProduct);
 
 export default router;

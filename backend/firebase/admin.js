@@ -14,6 +14,7 @@
 
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
 // createRequire nos permite leer el archivo JSON de credenciales.
 // Los ES Modules (import/export) no pueden hacer import de JSON directamente
@@ -63,5 +64,6 @@ if (!getApps().length) {
 // Cualquier archivo que haga: import { db } from "../firebase/admin.js"
 // obtendrá esta misma conexión ya inicializada.
 const db = getFirestore();
+const auth = getAuth();
 
-export { db };
+export { db, auth };

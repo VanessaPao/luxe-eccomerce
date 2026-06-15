@@ -6,6 +6,7 @@ import {
   removeItem,
   clearCart,
 } from "../controllers/cartController.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -15,6 +16,8 @@ const router = Router();
  *   get:
  *     tags: [Carrito]
  *     summary: Obtener el carrito de un usuario
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -25,7 +28,7 @@ const router = Router();
  *       200:
  *         description: Lista de items del carrito
  */
-router.get("/:userId", getCart);
+router.get("/:userId", authenticateToken, getCart);
 
 /**
  * @openapi
@@ -33,6 +36,8 @@ router.get("/:userId", getCart);
  *   post:
  *     tags: [Carrito]
  *     summary: Agregar un item al carrito
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -58,7 +63,7 @@ router.get("/:userId", getCart);
  *       200:
  *         description: Item agregado
  */
-router.post("/:userId", addItem);
+router.post("/:userId", authenticateToken, addItem);
 
 /**
  * @openapi
@@ -66,6 +71,8 @@ router.post("/:userId", addItem);
  *   patch:
  *     tags: [Carrito]
  *     summary: Actualizar cantidad de un item
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -90,7 +97,7 @@ router.post("/:userId", addItem);
  *       200:
  *         description: Cantidad actualizada
  */
-router.patch("/:userId/:productId", updateQuantity);
+router.patch("/:userId/:productId", authenticateToken, updateQuantity);
 
 /**
  * @openapi
@@ -98,6 +105,8 @@ router.patch("/:userId/:productId", updateQuantity);
  *   delete:
  *     tags: [Carrito]
  *     summary: Eliminar un item del carrito
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -113,7 +122,7 @@ router.patch("/:userId/:productId", updateQuantity);
  *       200:
  *         description: Item eliminado
  */
-router.delete("/:userId/:productId", removeItem);
+router.delete("/:userId/:productId", authenticateToken, removeItem);
 
 /**
  * @openapi
@@ -121,6 +130,8 @@ router.delete("/:userId/:productId", removeItem);
  *   delete:
  *     tags: [Carrito]
  *     summary: Vaciar todo el carrito
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -131,6 +142,6 @@ router.delete("/:userId/:productId", removeItem);
  *       200:
  *         description: Carrito vaciado
  */
-router.delete("/:userId", clearCart);
+router.delete("/:userId", authenticateToken, clearCart);
 
 export default router;

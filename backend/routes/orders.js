@@ -6,6 +6,7 @@
 import express from "express";
 import { create } from "../controllers/orderController.js";
 import { db } from "../firebase/admin.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -15,6 +16,8 @@ const router = express.Router();
  *   post:
  *     tags: [Órdenes]
  *     summary: Crear una nueva orden
+ *     security:
+ *       - BearerAuth: []
  *     description: >
  *       Crea una orden en Firestore tras validar los datos del cliente.
  *       Requiere userId, items (array no vacío), total y shippingAddress.
@@ -99,7 +102,7 @@ const router = express.Router();
  *             schema:
  *               $ref: "#/components/schemas/ErrorResponse"
  */
-router.post("/", create);
+router.post("/", authenticateToken, create);
 
 /**
  * @openapi
@@ -107,6 +110,8 @@ router.post("/", create);
  *   get:
  *     tags: [Órdenes]
  *     summary: Obtener órdenes de un usuario
+ *     security:
+ *       - BearerAuth: []
  *     description: Devuelve todas las órdenes de un usuario específico, ordenadas por fecha descendente.
  *     parameters:
  *       - in: path
@@ -128,7 +133,7 @@ router.post("/", create);
  *       500:
  *         description: Error del servidor
  */
-router.get("/user/:userId", async (req, res) => {
+router.get("/user/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
 

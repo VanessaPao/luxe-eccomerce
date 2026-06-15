@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { functions, db } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc } from 'firebase/firestore';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import './PaymentStatus.css';
 
 export default function PaymentSuccess() {
@@ -28,7 +28,7 @@ export default function PaymentSuccess() {
         if (sessionId) {
           // --- Flujo de Stripe Express ---
           // Llamamos al servidor Express para verificar el pago y crear la orden en Firestore de forma segura
-          const response = await fetch(`${API_BASE_URL}/api/checkout/verify`, {
+          const response = await authFetch(`${API_BASE_URL}/api/checkout/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ sessionId }),

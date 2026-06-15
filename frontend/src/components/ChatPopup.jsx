@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../utils/api';
+import { API_BASE_URL, authFetch } from '../utils/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { Lock, Bot, Headphones, Ticket, X, Send } from 'lucide-react';
+import { Lock, Bot, Headphones, Ticket, X, Send, MessageCircle } from 'lucide-react';
 import './ChatPopup.css';
 
 /* ─── AI Chat Tab ─────────────────────────────────────────────────────────── */
@@ -145,7 +145,7 @@ function SupportChat({ user, profile }) {
   const fetchTickets = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/support/tickets/user/${user.uid}`);
+      const res = await authFetch(`${API_BASE_URL}/api/support/tickets/user/${user.uid}`);
       if (res.ok) {
         const list = await res.json();
         setTickets(list);
@@ -190,7 +190,7 @@ function SupportChat({ user, profile }) {
     setCreating(true);
     try {
       const clientName = profile?.firstName ? `${profile.firstName} ${profile.lastName || ''}`.trim() : user.displayName || 'Cliente';
-      const res = await fetch(`${API_BASE_URL}/api/support/tickets`, {
+      const res = await authFetch(`${API_BASE_URL}/api/support/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -220,7 +220,7 @@ function SupportChat({ user, profile }) {
     setSending(true);
     try {
       const clientName = profile?.firstName || 'Cliente';
-      await fetch(`${API_BASE_URL}/api/support/tickets/${activeTicket.id}/reply`, {
+      await authFetch(`${API_BASE_URL}/api/support/tickets/${activeTicket.id}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -392,7 +392,7 @@ export default function ChatPopup() {
     <>
       {/* FAB */}
       <button className="chat-fab" onClick={() => setIsOpen(!isOpen)} aria-label="Abrir chat">
-        {isOpen ? <X size={20} /> : <Bot size={20} />}
+        {isOpen ? <X size={20} /> : <MessageCircle size={20} />}
       </button>
 
       {/* Widget */}

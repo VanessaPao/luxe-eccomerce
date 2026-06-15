@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { uploadImageToCloudinary } from '../../utils/cloudinary';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import CustomSelect from '../../components/CustomSelect';
 
 const TYPE_OPTIONS = {
@@ -159,7 +159,7 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
       }
 
       if (editingProduct) {
-        const res = await fetch(`${API_BASE_URL}/api/products/${editingProduct.id}`, {
+        const res = await authFetch(`${API_BASE_URL}/api/products/${editingProduct.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productData),
@@ -169,7 +169,7 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
           throw new Error(err.error || 'Error al actualizar producto');
         }
       } else {
-        const res = await fetch(`${API_BASE_URL}/api/products`, {
+        const res = await authFetch(`${API_BASE_URL}/api/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productData),

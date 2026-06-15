@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "../firebase/admin.js";
+import { authenticateToken, requireRole } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -9,6 +10,8 @@ const router = Router();
  *   get:
  *     tags: [Soporte]
  *     summary: Obtener todos los tickets de soporte
+ *     security:
+ *       - BearerAuth: []
  *     description: Recupera la lista completa de tickets registrados en el sistema de soporte (vista del agente/administrador).
  *     responses:
  *       200:
@@ -22,7 +25,7 @@ const router = Router();
  *       500:
  *         description: Error del servidor
  */
-router.get("/tickets", async (req, res) => {
+router.get("/tickets", authenticateToken, requireRole("admin", "support"), async (req, res) => {
   try {
     const snapshot = await db.collection("supportTickets")
       .orderBy("createdAt", "desc")
@@ -50,6 +53,8 @@ router.get("/tickets", async (req, res) => {
  *   get:
  *     tags: [Soporte]
  *     summary: Obtener tickets de un usuario
+ *     security:
+ *       - BearerAuth: []
  *     description: Recupera los tickets creados por un usuario específico (vista del cliente).
  *     parameters:
  *       - in: path
@@ -70,7 +75,7 @@ router.get("/tickets", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.get("/tickets/user/:userId", async (req, res) => {
+router.get("/tickets/user/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const snapshot = await db.collection("supportTickets")
@@ -100,6 +105,8 @@ router.get("/tickets/user/:userId", async (req, res) => {
  *   post:
  *     tags: [Soporte]
  *     summary: Crear un nuevo ticket de soporte
+ *     security:
+ *       - BearerAuth: []
  *     description: Registra un nuevo ticket de soporte del cliente en Firestore.
  *     requestBody:
  *       required: true
@@ -129,7 +136,7 @@ router.get("/tickets/user/:userId", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.post("/tickets", async (req, res) => {
+router.post("/tickets", authenticateToken, async (req, res) => {
   try {
     const { userId, userName, userEmail, subject, message } = req.body;
 
@@ -178,6 +185,8 @@ router.post("/tickets", async (req, res) => {
  *   post:
  *     tags: [Soporte]
  *     summary: Responder a un ticket de soporte
+ *     security:
+ *       - BearerAuth: []
  *     description: Agrega un nuevo mensaje de respuesta al ticket de soporte.
  *     parameters:
  *       - in: path
@@ -208,7 +217,7 @@ router.post("/tickets", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.post("/tickets/:id/reply", async (req, res) => {
+router.post("/tickets/:id/reply", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { senderId, senderRole, senderName, text, status } = req.body;
@@ -284,6 +293,8 @@ router.post("/tickets/:id/reply", async (req, res) => {
  *   patch:
  *     tags: [Soporte]
  *     summary: Actualizar estado de un ticket
+ *     security:
+ *       - BearerAuth: []
  *     description: Cambia el estado del ticket de soporte (ej. de 'open' a 'in_progress' o 'resolved').
  *     parameters:
  *       - in: path
@@ -309,7 +320,7 @@ router.post("/tickets/:id/reply", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.patch("/tickets/:id/status", async (req, res) => {
+router.patch("/tickets/:id/status", authenticateToken, requireRole("admin", "support"), async (req, res) => {
   try {
     const { id } = req.params;
     const { status, changedById, changedByName, changedByRole } = req.body;
@@ -372,6 +383,8 @@ router.patch("/tickets/:id/status", async (req, res) => {
  *   get:
  *     tags: [Soporte]
  *     summary: Obtener métricas y auditoría de soporte para el administrador
+ *     security:
+ *       - BearerAuth: []
  *     description: Calcula en el servidor el resumen general, estadísticas por agente, ranking y tiempos promedio de resolución.
  *     responses:
  *       200:
@@ -379,7 +392,7 @@ router.patch("/tickets/:id/status", async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.get("/admin/metrics", async (req, res) => {
+router.get("/admin/metrics", authenticateToken, requireRole("admin"), async (req, res) => {
   try {
     // 1. Obtener todos los tickets
     const ticketsSnapshot = await db.collection("supportTickets").get();

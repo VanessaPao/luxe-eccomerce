@@ -41,6 +41,14 @@ Además de esta API Express, el proyecto usa **Cloud Functions para pagos**:
       { name: "Carrusel", description: "Gestión del carrusel principal (Hero)" },
     ],
     components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "Token de Firebase ID. Obtenerlo desde el frontend: await user.getIdToken()",
+        },
+      },
       schemas: {
         Ticket: {
           type: "object",

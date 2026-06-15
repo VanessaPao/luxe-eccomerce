@@ -5,7 +5,7 @@ import { useCart } from '../../context/CartContext';
 import { saveUserAddress } from '../../firebase/firestore';
 import { functions } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import { MapPin, CreditCard } from 'lucide-react';
 import './Checkout.css';
 
@@ -137,7 +137,7 @@ export default function Checkout() {
         });
 
         // En lugar de usar Cloud Functions, ahora llamamos a nuestro servidor Express
-        const response = await fetch(`${API_BASE_URL}/api/checkout`, {
+        const response = await authFetch(`${API_BASE_URL}/api/checkout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -173,7 +173,7 @@ export default function Checkout() {
           image: i.image,
         }));
 
-        const response = await fetch(`${API_BASE_URL}/api/checkout/mercadopago`, {
+        const response = await authFetch(`${API_BASE_URL}/api/checkout/mercadopago`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

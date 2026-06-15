@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../../utils/api';
+import { API_BASE_URL, authFetch } from '../../utils/api';
 import './Profile.css';
 
 const STATUS_LABELS = {
@@ -37,7 +37,7 @@ export default function Profile() {
     const fetchOrders = async () => {
       setOrdersLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/orders/user/${user.uid}`);
+        const res = await authFetch(`${API_BASE_URL}/api/orders/user/${user.uid}`);
         if (res.ok) {
           const data = await res.json();
           setOrders(data);
