@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { functions, db } from '../../firebase/config';
-import { httpsCallable } from 'firebase/functions';
+import { db } from '../../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { API_BASE_URL, authFetch } from '../../utils/api';
 import './PaymentStatus.css';
@@ -10,6 +10,7 @@ import './PaymentStatus.css';
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const { clearCart } = useCart();
 
   const [loading, setLoading] = useState(true);
@@ -22,6 +23,9 @@ export default function PaymentSuccess() {
 
   useEffect(() => {
     let active = true;
+
+    // Esperar a que Firebase restaure la sesión antes de hacer la petición
+    if (authLoading) return;
 
     const processPayment = async () => {
       try {
@@ -82,7 +86,7 @@ export default function PaymentSuccess() {
     return () => {
       active = false;
     };
-  }, [sessionId, queryOrderId, clearCart]);
+  }, [sessionId, queryOrderId, clearCart, authLoading, user]);
 
   if (loading) {
     return (
