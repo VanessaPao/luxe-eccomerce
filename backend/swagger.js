@@ -39,6 +39,7 @@ Además de esta API Express, el proyecto usa **Cloud Functions para pagos**:
       { name: "Chatbot", description: "Asistente de Inteligencia Artificial" },
       { name: "Soporte", description: "Panel de Tickets y Soporte Técnico" },
       { name: "Carrusel", description: "Gestión del carrusel principal (Hero)" },
+      { name: "Usuarios", description: "Gestión de usuarios y roles del sistema" },
     ],
     components: {
       securitySchemes: {
@@ -150,6 +151,17 @@ Además de esta API Express, el proyecto usa **Cloud Functions para pagos**:
             likes: { type: "array", items: { type: "string" }, description: "UIDs de usuarios que dieron like" },
             dislikes: { type: "array", items: { type: "string" }, description: "UIDs de usuarios que dieron dislike" },
             createdAt: { type: "string", format: "date-time" },
+          },
+        },
+        User: {
+          type: "object",
+          properties: {
+            uid: { type: "string", description: "UID del usuario en Firebase" },
+            email: { type: "string", format: "email", description: "Correo electrónico del usuario" },
+            firstName: { type: "string", description: "Nombre del usuario" },
+            lastName: { type: "string", description: "Apellido del usuario" },
+            role: { type: "string", enum: ["admin", "support", "user"], description: "Rol del usuario en el sistema" },
+            createdAt: { type: "string", format: "date-time", description: "Fecha de registro" },
           },
         },
         ErrorResponse: {
