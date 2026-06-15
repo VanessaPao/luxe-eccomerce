@@ -4,10 +4,10 @@ import ProductCard from '../../components/ProductCard';
 import useFavourites from '../../hooks/useFavourites';
 import useFilteredProducts from '../../hooks/useFilteredProducts';
 
-const categories = ['Bolsos', 'Cinturones', 'Joyería', 'Gafas', 'Pañuelos', 'Sombreros'];
-const sizes = ['Grande', 'Mediano', 'Chico'];
-const materials = ['Cuero', 'Metal', 'Seda', 'Perla', 'Paja'];
-const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Marrón'];
+const categories = ['Bolsos', 'Cinturones', 'Joyería', 'Gafas', 'Pañuelos', 'Sombreros', 'Mochilas'];
+const sizes = [];
+const materials = ['Cuero', 'Metal', 'Seda', 'Perla', 'Paja', 'Lino', 'Algodón'];
+const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Multicolor'];
 
 export default function Accesorios() {
   const { products, loading, filters, toggleArrayFilter, clearFilter, handlePriceChange, maxPrice } = useFilteredProducts({ department: 'accesorios' });

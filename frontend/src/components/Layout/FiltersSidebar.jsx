@@ -78,28 +78,30 @@ export default function FiltersSidebar({
         ))}
       </section>
 
-      {/* Talla */}
-      <section className="filter-group">
-        <h3>Talla</h3>
-        <label
-          className={`filter-option${filters.size.length === 0 ? ' selected' : ''}`}
-          onClick={() => clearFilter('size')}
-          style={{ cursor: 'pointer' }}
-        >
-          Todas
-        </label>
-        {sizes.map((sz) => (
+      {/* Talla — solo se muestra si hay opciones de talla */}
+      {sizes && sizes.length > 0 && (
+        <section className="filter-group">
+          <h3>Talla</h3>
           <label
-            key={sz}
-            className={`filter-option${filters.size.includes(sz) ? ' selected' : ''}`}
-            onClick={(e) => { e.preventDefault(); selectFilter('size', sz); }}
+            className={`filter-option${filters.size.length === 0 ? ' selected' : ''}`}
+            onClick={() => clearFilter('size')}
             style={{ cursor: 'pointer' }}
           >
-            <span className={`filter-radio${filters.size.includes(sz) ? ' checked' : ''}`} />
-            {sz}
+            Todas
           </label>
-        ))}
-      </section>
+          {sizes.map((sz) => (
+            <label
+              key={sz}
+              className={`filter-option${filters.size.includes(sz) ? ' selected' : ''}`}
+              onClick={(e) => { e.preventDefault(); selectFilter('size', sz); }}
+              style={{ cursor: 'pointer' }}
+            >
+              <span className={`filter-radio${filters.size.includes(sz) ? ' checked' : ''}`} />
+              {sz}
+            </label>
+          ))}
+        </section>
+      )}
 
       {/* Precio */}
       <section className="filter-group">

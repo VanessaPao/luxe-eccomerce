@@ -1,10 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_BASE_URL, authFetch } from '../../utils/api';
 import { Trash2, Pencil } from 'lucide-react';
+
+const DEPT_FILTERS = [
+  { key: 'todos', label: 'Todos' },
+  { key: 'mujer', label: 'Mujer' },
+  { key: 'hombre', label: 'Hombre' },
+  { key: 'accesorios', label: 'Accesorios' },
+  { key: 'rebajas', label: 'Rebajas' },
+];
+
+const ITEMS_PER_PAGE = 10;
 
 const ProductList = ({ onEditProduct, refreshKey }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('todos');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -21,6 +34,19 @@ const ProductList = ({ onEditProduct, refreshKey }) => {
     };
     fetchProducts();
   }, [refreshKey]);
+
+  const filteredProducts = useMemo(() => {
+    if (activeFilter === 'todos') return products;
+    if (activeFilter === 'rebajas') return products.filter(p => p.sale === true || p.sale === 'true');
+    return products.filter(p => (p.department || '').toLowerCase() === activeFilter);
+  }, [products, activeFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedProducts = filteredProducts.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE
+  );
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
@@ -42,7 +68,18 @@ const ProductList = ({ onEditProduct, refreshKey }) => {
   return (
     <div className="product-list-container">
       <div className="product-list-header">
-        <h2>Gestión de Productos ({products.length})</h2>
+        <h2>Gestión de Productos ({filteredProducts.length}{activeFilter !== 'todos' ? ` de ${products.length}` : ''})</h2>
+        <div className="admin-dept-filters">
+          {DEPT_FILTERS.map(f => (
+            <button
+              key={f.key}
+              className={`admin-dept-btn${activeFilter === f.key ? ' active' : ''}`}
+              onClick={() => { setActiveFilter(f.key); setCurrentPage(1); }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
       
       <div className="table-responsive">
@@ -61,12 +98,12 @@ const ProductList = ({ onEditProduct, refreshKey }) => {
             </tr>
           </thead>
           <tbody>
-            {products.length === 0 ? (
+            {paginatedProducts.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center">No hay productos disponibles.</td>
+                <td colSpan="9" className="text-center">No hay productos en esta página.</td>
               </tr>
             ) : (
-              products.map((product) => (
+              paginatedProducts.map((product) => (
                 <tr key={product.id}>
                   <td>
                     <img 
@@ -121,6 +158,28 @@ const ProductList = ({ onEditProduct, refreshKey }) => {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="admin-pagination">
+          <button
+            className="admin-pagination-btn"
+            disabled={safeCurrentPage <= 1}
+            onClick={() => setCurrentPage(p => p - 1)}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span className="admin-pagination-info">
+            Página {safeCurrentPage} de {totalPages}
+          </span>
+          <button
+            className="admin-pagination-btn"
+            disabled={safeCurrentPage >= totalPages}
+            onClick={() => setCurrentPage(p => p + 1)}
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -29,7 +29,11 @@ const TYPE_OPTIONS = {
     'Pulseras',
     'Collares',
     'Anillos',
-    'Aretes'
+    'Aretes',
+    'Gorros',
+    'Pañuelos',
+    'Cinturones',
+    'Mochilas'
   ]
 };
 
@@ -328,19 +332,18 @@ const ProductForm = ({ editingProduct, onSave, onCancel }) => {
             name="material"
             value={formData.material}
             onChange={handleChange}
-            options={['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero', 'Metal', 'Perla', 'Paja']}
+            options={['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero', 'Metal', 'Perla', 'Paja', 'Denim']}
             required
           />
         </div>
 
         <div className="form-group">
           <label>Color</label>
-          <input
-            type="text"
+          <CustomSelect
             name="color"
             value={formData.color}
             onChange={handleChange}
-            placeholder="Ej. Negro, Rojo, Azul marino"
+            options={['Negro', 'Blanco', 'Rojo', 'Azul', 'Verde', 'Rosa', 'Morado', 'Gris', 'Beige', 'Multicolor']}
             required
           />
         </div>

@@ -6,7 +6,7 @@ import useFilteredProducts from '../../hooks/useFilteredProducts';
 
 const categories = ['Vestidos', 'Pantalones', 'Camisas', 'Abrigos', 'Zapatos', 'Faldas', 'Chaquetas'];
 const sizes = ['Grande', 'Mediano', 'Chico'];
-const materials = ['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero'];
+const materials = ['Seda', 'Algodón', 'Lino', 'Lana', 'Cuero', 'Denim'];
 const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Marrón'];
 
 export default function Mujer() {

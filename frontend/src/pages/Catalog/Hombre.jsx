@@ -6,7 +6,7 @@ import useFilteredProducts from '../../hooks/useFilteredProducts';
 
 const categories = ['Trajes', 'Camisas', 'Pantalones', 'Abrigos', 'Zapatos'];
 const sizes = ['Grande', 'Mediano', 'Chico'];
-const materials = ['Lana', 'Algodón', 'Lino', 'Cuero'];
+const materials = ['Lana', 'Algodón', 'Lino', 'Cuero', 'Denim'];
 const colors = ['Negro', 'Azul', 'Blanco', 'Gris', 'Marrón'];
 
 export default function Hombre() {
